@@ -1,8 +1,6 @@
 // network.go
 // Main neural network layer code.
 
-// NOTE: due to a arcchitectual failure on the author's part, lots of layer code is repeated unnecessarily
-
 package nn
 
 import (
