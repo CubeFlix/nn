@@ -1,0 +1,37 @@
+# github.com/cubeflix/nn [github.com/cubeflix/nn.test]
+./matrix.go:350:6: ans.SetCol undefined (type Matrix has no field or method SetCol)
+./network.go:95:3: not enough arguments to return
+        have (Matrix, error)
+        want (Matrix, Matrix, Matrix, error)
+./network.go:98:3: not enough arguments to return
+        have (Matrix, error)
+        want (Matrix, Matrix, Matrix, error)
+./matrix_test.go:168:4: no new variables on left side of :=
+./matrix_test.go:168:4: cannot use a.T() (type Matrix) as type *testing.T in assignment
+./matrix_test.go:171:6: t.Rows undefined (type *testing.T has no field or method Rows)
+./matrix_test.go:171:21: t.Cols undefined (type *testing.T has no field or method Cols)
+./matrix_test.go:175:6: t.Get undefined (type *testing.T has no field or method Get)
+FAIL    github.com/cubeflix/nn [build failed]
+=========================================================================
+# github.com/cubeflix/nn [github.com/cubeflix/nn.test]
+./matrix.go:350:16: cannot use []float64 value as type int in argument to ans.SetColumn
+./matrix.go:350:16: cannot use error value as type []float64 in argument to ans.SetColumn
+./matrix_test.go:175:11: multiple-value tr.Get() in single-value context
+FAIL    github.com/cubeflix/nn [build failed]
+=========================================================================
+./activation.go:34:1: missing return at end of function
+./matrix.go:374:7: invalid operation: s += m.M[j][i] (mismatched types int and float64)
+./matrix.go:376:16: cannot use s (type int) as type float64 in assignment
+./matrix.go:380:3: too many arguments to return
+        have (Matrix)
+        want ()
+./matrix.go:391:7: invalid operation: s += m.M[i][j] (mismatched types int and float64)
+./matrix.go:393:16: cannot use s (type int) as type float64 in assignment
+./matrix.go:397:3: too many arguments to return
+        have (Matrix)
+        want ()
+./network.go:105:32: cannot call pointer method on l.Weights.T()
+./network.go:105:32: cannot take the address of l.Weights.T()
+./network.go:110:24: dValues.Sum(0) used as value
+./network.go:110:24: too many errors
+FAIL    github.com/cubeflix/nn [build failed]
