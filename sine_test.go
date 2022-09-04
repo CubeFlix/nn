@@ -21,24 +21,24 @@ func TestSine(t *testing.T) {
 	t.Logf("%v", l.Weights)
 
 	// Learning rate.
-	learningRate := 0.00001
+	learningRate := 0.000001
 
 	// Get start time.
 	starttime := time.Now()
 	t.Logf(starttime.String())
 
 	// Create the input data.
-	X, _ := NewMatrix(100, 1)
-	Y, _ := NewMatrix(100, 1)
-	for i := 0; i < 100; i++ {
-		_ = X.Set(i, 0, float64(i)/50)
-		_ = Y.Set(i, 0, math.Sin(float64(i)/50))
+	X, _ := NewMatrix(1000, 1)
+	Y, _ := NewMatrix(1000, 1)
+	for i := 0; i < 1000; i++ {
+		_ = X.Set(i, 0, float64(i)/1000)
+		_ = Y.Set(i, 0, math.Sin(float64(i)/1000))
 	}
 
 	// Get time.
 	t.Logf(time.Now().String())
 
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 1000; i++ {
 	gradientsWeightsL1 := Matrix{}
 	gradientsBiasesL1 := Matrix{}
 	gradientsWeightsL2 := Matrix{}
@@ -83,8 +83,9 @@ func TestSine(t *testing.T) {
 		return
 	}
 
-	if i % 50 == 0 {
+	if i % 100 == 0 {
 		t.Logf("%f", j)
+		// t.Logf("%v", out2)
 	}
 
 	// Layer 3 backward pass.
@@ -152,7 +153,7 @@ func TestSine(t *testing.T) {
                 return
         }
 
-	if i == 199 {
+	if i == 999 {
 		t.Logf("%v\n%v\n%v %v", X, out3, Y, j)
 	}
 
