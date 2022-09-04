@@ -11,5 +11,7 @@ This project is INCOMPLETE.
 
 - [ ] test out categorization (iris dataset)
 - [ ] add softmax classification
+- [ ] add and test optimizers (sgd, adam)
+- [ ] add dropout
 - [ ] try out 'Heavy' network classes (you know which one)
 

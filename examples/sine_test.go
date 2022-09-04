@@ -1,5 +1,6 @@
 // sine_test.go
 // Sine wave full network testing for nn.
+// Note: requires some fine-tuning
 
 package nn
 
@@ -7,7 +8,12 @@ import (
 	"testing"
 	"math"
 	"time"
+	"math/rand"
 )
+
+func ptr(val Matrix, _ error) *Matrix {
+    return &val
+}
 
 func TestSine(t *testing.T) {
 	// Create the layers.
@@ -21,30 +27,36 @@ func TestSine(t *testing.T) {
 	t.Logf("%v", l.Weights)
 
 	// Learning rate.
-	learningRate := 0.000001
+	learningRate := 0.00001
+
+	// Num of epochs.
+	epochs := 500
 
 	// Get start time.
 	starttime := time.Now()
 	t.Logf(starttime.String())
 
 	// Create the input data.
-	X, _ := NewMatrix(1000, 1)
-	Y, _ := NewMatrix(1000, 1)
-	for i := 0; i < 1000; i++ {
-		_ = X.Set(i, 0, float64(i)/1000)
-		_ = Y.Set(i, 0, math.Sin(float64(i)/1000))
+	samples := 500
+	X, _ := NewMatrix(samples, 1)
+	Y, _ := NewMatrix(samples, 1)
+	for i := 0; i < samples; i++ {
+		_ = X.Set(i, 0, float64(i)/float64(samples))
+		_ = Y.Set(i, 0, math.Sin(float64(i)/float64(samples) * 2 * math.Pi))
 	}
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(samples, func(i, j int) { X.M[i], X.M[j] = X.M[j], X.M[i]; Y.M[i], Y.M[j] = Y.M[j], Y.M[i] })
 
 	// Get time.
 	t.Logf(time.Now().String())
 
-	for i := 0; i < 1000; i++ {
 	gradientsWeightsL1 := Matrix{}
 	gradientsBiasesL1 := Matrix{}
 	gradientsWeightsL2 := Matrix{}
 	gradientsBiasesL2 := Matrix{}
 	gradientsWeightsL3 := Matrix{}
         gradientsBiasesL3 := Matrix{}
+	for i := 0; i < epochs; i++ {
 	// Forward and backward passes.
 
 	// Forward layer 1.
@@ -83,9 +95,11 @@ func TestSine(t *testing.T) {
 		return
 	}
 
+	// Scale the gradients down.
+	// dValues = dValues.MulScalar(0.001)
+
 	if i % 100 == 0 {
 		t.Logf("%f", j)
-		// t.Logf("%v", out2)
 	}
 
 	// Layer 3 backward pass.
@@ -96,6 +110,9 @@ func TestSine(t *testing.T) {
 	}
 	gradientsWeightsL3 = dWeights
 	gradientsBiasesL3 = dBiases
+
+	// Scale the gradients down.
+	// dValues = dValues.MulScalar(0.001)
 
 	// Layer 2 backward pass.
 	dWeights, dBiases, dValues, err = l2.Backward(out1, dValues)
@@ -116,45 +133,39 @@ func TestSine(t *testing.T) {
         gradientsBiasesL1 = dBiases
 
 	// Update the the weights and biases based on the gradients.
-	lWeights, err := l.Weights.Sub(gradientsWeightsL1.MulScalar(learningRate))
-	l.Weights = &lWeights
+	l.Weights = ptr(l.Weights.Sub(gradientsWeightsL1.MulScalar(learningRate)))
 	if err != nil {
 		t.Errorf(err.Error())
 		return
 	}
-	lBiases, err := l.Biases.Sub(gradientsBiasesL1.MulScalar(learningRate))
-	l.Biases = &lBiases
+	l.Biases = ptr(l.Biases.Sub(gradientsBiasesL1.MulScalar(learningRate)))
 	if err != nil {
                t.Errorf(err.Error())
                return
         }
-	l2Weights, err := l2.Weights.Sub(gradientsWeightsL2.MulScalar(learningRate))
-	l2.Weights = &l2Weights
+	l2.Weights = ptr(l2.Weights.Sub(gradientsWeightsL2.MulScalar(learningRate)))
 	if err != nil {
 		t.Errorf(err.Error())
 		return
 	}
-	l2Biases, err := l2.Biases.Sub(gradientsBiasesL2.MulScalar(learningRate))
-	l2.Biases = &l2Biases
+	l2.Biases = ptr(l2.Biases.Sub(gradientsBiasesL2.MulScalar(learningRate)))
 	if err != nil {
 		t.Errorf(err.Error())
 		return
 	}
-	l3Weights, err := l3.Weights.Sub(gradientsWeightsL3.MulScalar(learningRate))
-        l3.Weights = &l3Weights
+	l3.Weights = ptr(l3.Weights.Sub(gradientsWeightsL3.MulScalar(learningRate)))
 	if err != nil {
                 t.Errorf(err.Error())
                 return
         }
-	l3Biases, err := l3.Biases.Sub(gradientsBiasesL3.MulScalar(learningRate))
-	l3.Biases = &l3Biases
+	l3.Biases = ptr(l3.Biases.Sub(gradientsBiasesL3.MulScalar(learningRate)))
 	if err != nil {
                 t.Errorf(err.Error())
                 return
         }
 
-	if i == 999 {
-		t.Logf("%v\n%v\n%v %v", X, out3, Y, j)
+	if i == epochs - 1 {
+		t.Logf("%v\n%v\n%v %v", gradientsWeightsL1, out3, Y, j)
 	}
 
 	} // Epoch loop

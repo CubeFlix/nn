@@ -309,3 +309,209 @@ func (l *SigmoidLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matri
 
         return dWeights, dBiases, dInputs, nil
 }
+
+// Main leaky RELU neural network layer struct.
+type LeakyLayer struct {
+        InputSize  int
+        OutputSize int
+        Weights    *Matrix
+        Biases     *Matrix
+	Slope      float64
+}
+
+// Create a new leaky layer.
+func NewLeakyLayer(inputSize, outputSize int, slope float64) (LeakyLayer, error) {
+        // Check that the input and output sizes are valid.
+        if inputSize < 1 || outputSize < 1 {
+                return LeakyLayer{}, invalidLayerDimensionsError(inputSize, outputSize)
+        }
+
+	// Check that the slope value is valid
+	if slope < 0 {
+		return LeakyLayer{}, errors.New("Invalid LeakyRELU slope.")
+	}
+
+        // Create the new matricies.
+        weights, _ := NewMatrix(inputSize, outputSize)
+        biases, _ := NewMatrix(1, outputSize)
+
+        // Create and return the new leaky layer.
+        return LeakyLayer{
+                InputSize:  inputSize,
+                OutputSize: outputSize,
+                Weights:    &weights,
+                Biases:     &biases,
+		Slope:      slope,
+        }, nil
+}
+
+// Initialize the leaky layer values.
+func (l *LeakyLayer) Init() {
+        // Using He weight initialization. Calculate the std for the weights based on the number of inputs.
+        std := math.Sqrt(float64(2) / float64(l.InputSize))
+
+        // Create the random number generator.
+        r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+        // Randomize the weights.
+        for i := 0; i < l.InputSize; i++ {
+                for j := 0; j < l.OutputSize; j++ {
+                        // Create a random value for the weight and multiply it by the std.
+                        l.Weights.M[i][j] = r.Float64() * std
+                }
+        }
+}
+
+// Leaky layer forward pass.
+func (l *LeakyLayer) Forward(x Matrix) (Matrix, error) {
+        // Check that the input matrix is valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+
+        // Complete the feedforward process (Y = relu(XW + B)).
+        out, err := x.Dot(*l.Weights)
+        if err != nil {
+                return Matrix{}, err
+        }
+
+        for i := 0; i < out.Rows; i++ {
+                for j := 0; j < out.Cols; j++ {
+                        out.M[i][j] += l.Biases.M[0][j]
+                }
+        }
+
+        // Apply leaky RELU activation for the hidden layer.
+        out = LeakyRELU(out, l.Slope)
+
+        // Return the matrix.
+        return out, nil
+}
+
+// Leaky layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
+func (l *LeakyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+        // Check that the input and output matricies are valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+        if dValues.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
+        }
+
+        // Calculate the gradients on the leaky RELU activation function.
+	dValues = LeakyRELUPrime(dValues, l.Slope)
+
+        // Complete the backpropagation process and calculate the gradients.
+        it := x.T()
+        wt := l.Weights.T()
+        dWeights, err := it.Dot(dValues)
+        if err != nil {
+                return Matrix{}, Matrix{}, Matrix{}, err
+        }
+
+        dBiases := dValues.Sum(0)
+
+        dInputs, err := dValues.Dot(wt)
+
+        return dWeights, dBiases, dInputs, nil
+}
+
+// Main softmax neural network layer struct.
+type SoftmaxLayer struct {
+        InputSize  int
+        OutputSize int
+        Weights    *Matrix
+        Biases     *Matrix
+}
+
+// Create a new softmax layer.
+func NewSoftmaxLayer(inputSize, outputSize int) (SoftmaxLayer, error) {
+        // Check that the input and output sizes are valid.
+        if inputSize < 1 || outputSize < 1 {
+                return SoftmaxLayer{}, invalidLayerDimensionsError(inputSize, outputSize)
+        }
+
+        // Create the new matricies.
+        weights, _ := NewMatrix(inputSize, outputSize)
+        biases, _ := NewMatrix(1, outputSize)
+
+        // Create and return the new softmax layer.
+        return SoftmaxLayer{
+                InputSize:  inputSize,
+                OutputSize: outputSize,
+                Weights:    &weights,
+                Biases:     &biases,
+        }, nil
+}
+
+// Initialize the softmax layer values.
+func (l *SoftmaxLayer) Init() {
+        // Using He weight initialization. Calculate the std for the weights based on the number of inputs.
+        std := math.Sqrt(float64(2) / float64(l.InputSize))
+
+        // Create the random number generator.
+        r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+        // Randomize the weights.
+        for i := 0; i < l.InputSize; i++ {
+                for j := 0; j < l.OutputSize; j++ {
+                        // Create a random value for the weight and multiply it by the std.
+                        l.Weights.M[i][j] = r.Float64() * std
+                }
+        }
+}
+
+// Softmax layer forward pass.
+func (l *SoftmaxLayer) Forward(x Matrix) (Matrix, error) {
+        // Check that the input matrix is valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+
+        // Complete the feedforward process (Y = softmax(XW + B)).
+        out, err := x.Dot(*l.Weights)
+        if err != nil {
+                return Matrix{}, err
+        }
+
+        for i := 0; i < out.Rows; i++ {
+                for j := 0; j < out.Cols; j++ {
+                        out.M[i][j] += l.Biases.M[0][j]
+                }
+        }
+
+        // Apply softmax activation for the softmax layer.
+        out = Softmax(out)
+
+        // Return the matrix.
+        return out, nil
+}
+
+// Softmax layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
+func (l *SoftmaxLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+        // Check that the input and output matricies are valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+        if dValues.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
+        }
+
+        // Calculate the gradients on the softmax activation function.
+        
+
+        // Complete the backpropagation process and calculate the gradients.
+        it := x.T()
+        wt := l.Weights.T()
+        dWeights, err := it.Dot(dValues)
+        if err != nil {
+                return Matrix{}, Matrix{}, Matrix{}, err
+        }
+
+        dBiases := dValues.Sum(0)
+
+        dInputs, err := dValues.Dot(wt)
+
+        return dWeights, dBiases, dInputs, nil
+}
+// Softmax+loss layer
