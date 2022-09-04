@@ -8,7 +8,8 @@ Currently (as of 9/3/22) the only full neural network test for `nn` is in `sine_
 
 This project is INCOMPLETE.
 -----
-- [] test out categorization (iris dataset)
-- [] add softmax classification
-- [] try out 'Heavy' network classes (you know which one)
+
+- [ ] test out categorization (iris dataset)
+- [ ] add softmax classification
+- [ ] try out 'Heavy' network classes (you know which one)
 
