@@ -175,36 +175,56 @@ func NewCrossEntropyLoss(size int) (CrossEntropyLoss, error) {
 }
 
 // Cross-entropy loss forward pass function.
-func (loss *CrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, error) {
+func (loss *CrossEntropyLoss) Forward(yhat Matrix, y Matrix) (Matrix, error) {
         // Check that all the dimensions match up.
         if yhat.Cols != loss.Size || y.Cols != loss.Size {
                 // Find which matrix has incorrect dimensions and return an error.
                 if yhat.Cols != loss.Size {
-                        return 0, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
+                        return Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
                 } else if y.Cols != loss.Size {
-                        return 0, invalidMatrixDimensionsError(y.Rows, y.Cols)
+                        return Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
                 }
         }
 
         // Calculate the cross-entropy loss (J = -log(Σ[clip(yhat) * y])).
-        _, err := yhat.Sub(y)
-        if err != nil {
-                return 0, err
+	clipped := Clip(yhat)
+
+	likelihoods, _ := NewMatrix(yhat.Rows, 1)
+
+        for i := 0; i < yhat.Rows; i++ {
+		// Loop over each row and calculate the sum.
+		sum := float64(0)
+		for j := 0; j < yhat.Cols; j++ {
+			sum += clipped.M[i][j] * y.M[i][j]
+		}
+		likelihoods.M[i][0] = -math.Log(sum)
         }
 
-        //for i := 0; i < sub.Cols; i++ {
-        //        sub.M[0][i] = math.Pow(sub.M[0][i], 2)
-        //}
-
-        //out := sub.Sum(1).M[0][0]
-
-        return 0, nil
+        return likelihoods, nil
 }
 
 // Cross-entropy loss backward pass function.
-// Note:
 func (loss *CrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
-	return Matrix{}, nil
+	// Check that all the dimensions match up.
+        if yhat.Cols != loss.Size || y.Cols != loss.Size {
+                // Find which matrix has incorrect dimensions and return an error.
+                if yhat.Cols != loss.Size {
+                        return Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
+                } else if y.Cols != loss.Size {
+                        return Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
+                }
+        }
+
+        // Calculate the gradient of the cross-entropy loss function.
+	dInputs, _ := NewMatrix(yhat.Rows, yhat.Cols)
+        for i := 0; i < dInputs.Rows; i++ {
+                for j := 0; j < dInputs.Cols; j++ {
+                        dInputs.M[i][j] = (-y.M[i][j]/yhat.M[i][j])/float64(yhat.Rows)
+                }
+        }
+
+        // Return the final gradient.
+        return dInputs, nil
 }
 
 

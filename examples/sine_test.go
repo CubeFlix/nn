@@ -27,10 +27,10 @@ func TestSine(t *testing.T) {
 	t.Logf("%v", l.Weights)
 
 	// Learning rate.
-	learningRate := 0.00001
+	learningRate := 0.000001
 
 	// Num of epochs.
-	epochs := 500
+	epochs := 700
 
 	// Get start time.
 	starttime := time.Now()
@@ -42,7 +42,7 @@ func TestSine(t *testing.T) {
 	Y, _ := NewMatrix(samples, 1)
 	for i := 0; i < samples; i++ {
 		_ = X.Set(i, 0, float64(i)/float64(samples))
-		_ = Y.Set(i, 0, math.Sin(float64(i)/float64(samples) * 2 * math.Pi))
+		_ = Y.Set(i, 0, (math.Sin(float64(i)/float64(samples) * 2 * math.Pi) + 1))
 	}
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(samples, func(i, j int) { X.M[i], X.M[j] = X.M[j], X.M[i]; Y.M[i], Y.M[j] = Y.M[j], Y.M[i] })
@@ -87,6 +87,13 @@ func TestSine(t *testing.T) {
                 return
         }
 
+	if i == epochs - 1 {
+                t.Logf("%v\n%v\n%v %v", l.Weights, out3, Y, j)
+        }
+	if i % 100 == 0 {
+                t.Logf("%f", j)
+        }
+
 	// Backward passes.
 	// Loss backward pass.
 	dValues, err := loss.Backward(out3, Y)
@@ -96,11 +103,7 @@ func TestSine(t *testing.T) {
 	}
 
 	// Scale the gradients down.
-	// dValues = dValues.MulScalar(0.001)
-
-	if i % 100 == 0 {
-		t.Logf("%f", j)
-	}
+	dValues = dValues.MulScalar(0.005)
 
 	// Layer 3 backward pass.
 	dWeights, dBiases, dValues, err := l3.Backward(out2, dValues)
@@ -163,10 +166,6 @@ func TestSine(t *testing.T) {
                 t.Errorf(err.Error())
                 return
         }
-
-	if i == epochs - 1 {
-		t.Logf("%v\n%v\n%v %v", gradientsWeightsL1, out3, Y, j)
-	}
 
 	} // Epoch loop
 }

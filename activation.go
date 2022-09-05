@@ -98,14 +98,14 @@ func LeakyRELUPrime(m Matrix, slope float64) Matrix {
 
 // Softmax activation function.
 func Softmax(m Matrix) Matrix {
-	for i := 0; i <= m.Rows; i++ {
+	for i := 0; i < m.Rows; i++ {
 		// Calculate the sum of the row and divide by it.
 		sum := float64(0)
-		for j := 0; i <= m.Cols; j++ {
+		for j := 0; j < m.Cols; j++ {
 			m.M[i][j] = math.Exp(m.M[i][j])
 			sum += m.M[i][j]
 		}
-		for j := 0; j <= m.Cols; j++ {
+		for j := 0; j < m.Cols; j++ {
 			m.M[i][j] = m.M[i][j]/sum
 		}
 	}

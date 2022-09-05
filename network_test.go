@@ -61,7 +61,7 @@ func TestLinearLayer(t *testing.T) {
         t.Logf("%v", out)
 
         // Perform the backward pass.
-        dValues, err := NewMatrixFromSlice([][]float64{[]float64{1, 1, 1, 1, 1}})
+        dValues, err := NewMatrixFromSlice([][]float64{[]float64{0.3, 0.1, 0.2, 0.2, 0.2}})
         dWeights, dBiases, dInputs, err := l.Backward(x, dValues)
         if err != nil {
                 t.Error(err.Error())
@@ -92,7 +92,7 @@ func TestSigmoidLayer(t *testing.T) {
         t.Logf("%v", out)
 
         // Perform the backward pass.
-        dValues, err := NewMatrixFromSlice([][]float64{[]float64{1, 1, 1, 1, 1}})
+        dValues, err := NewMatrixFromSlice([][]float64{[]float64{0.3, 0.1, 0.2, 0.2, 0.2}})
         dWeights, dBiases, dInputs, err := l.Backward(x, dValues)
         if err != nil {
                 t.Error(err.Error())
@@ -123,11 +123,42 @@ func TestLeakyLayer(t *testing.T) {
         t.Logf("%v", out)
 
         // Perform the backward pass.
-        dValues, err := NewMatrixFromSlice([][]float64{[]float64{1, 1, 1, 1, 1}})
+        dValues, err := NewMatrixFromSlice([][]float64{[]float64{0.3, 0.1, 0.2, 0.2, 0.2}})
         dWeights, dBiases, dInputs, err := l.Backward(x, dValues)
         if err != nil {
                 t.Error(err.Error())
                 return
+        }
+        t.Logf("%v, %v, %v", dWeights, dBiases, dInputs)
+}
+
+// Test softmax neural network hidden layer forward and backward passes.
+func TestSoftmaxLayer(t *testing.T) {
+        // Create the layer.
+        l, _ := NewSoftmaxLayer(3, 5)
+
+        // Initialize the layer.
+        l.Init()
+
+        // Perform the forward pass.
+        x, err := NewMatrixFromSlice([][]float64{[]float64{1, -1, 2}})
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        out, err := l.Forward(x)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v", out)
+
+        // Perform the backward pass.
+        dValues, err := NewMatrixFromSlice([][]float64{[]float64{0.3, 0.1, 0.2, 0.2, 0.2}})
+        dWeights, dBiases, dInputs, err := l.Backward(x, out, dValues)
+        if err != nil {
+                t.Error(err.Error())
+		return
         }
         t.Logf("%v, %v, %v", dWeights, dBiases, dInputs)
 }

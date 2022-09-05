@@ -405,8 +405,9 @@ func Clip(X Matrix) Matrix {
 		for j := 0; j < X.Cols; j++ {
 			if X.M[i][j] < 0 {
 				X.M[i][j] = float64(1e-7)
+			} else if X.M[i][j] > 1 {
+				X.M[i][j] = float64(1 - 1e-7)
 			}
-			X.M[i][j] = X.M[i][j]
 		}
 	}
 

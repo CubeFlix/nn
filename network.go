@@ -83,7 +83,7 @@ func (l *HiddenLayer) Forward(x Matrix) (Matrix, error) {
 	}
 
 	// Apply RELU activation for the hidden layer.
-	out = RELU(out)
+	RELU(out)
 
 	// Return the matrix.
 	return out, nil
@@ -100,7 +100,7 @@ func (l *HiddenLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix
 	}
 
 	// Calculate the gradients on the RELU activation function.
-	dValues = RELUPrime(dValues)
+	RELUPrime(dValues)
 
 	// Complete the backpropagation process and calculate the gradients.
 	it := x.T()
@@ -276,7 +276,7 @@ func (l *SigmoidLayer) Forward(x Matrix) (Matrix, error) {
         }
 
 	// Add the sigmoid activation function.
-	out = Sigmoid(out)
+	Sigmoid(out)
 
         // Return the matrix.
         return out, nil
@@ -293,7 +293,7 @@ func (l *SigmoidLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matri
         }
 
         // Calculate the gradients on the sigmoid activation function.
-        dValues = SigmoidPrime(dValues)
+        SigmoidPrime(x)
 
         // Complete the backpropagation process and calculate the gradients.
         it := x.T()
@@ -382,7 +382,7 @@ func (l *LeakyLayer) Forward(x Matrix) (Matrix, error) {
         }
 
         // Apply leaky RELU activation for the hidden layer.
-        out = LeakyRELU(out, l.Slope)
+        LeakyRELU(out, l.Slope)
 
         // Return the matrix.
         return out, nil
@@ -399,7 +399,7 @@ func (l *LeakyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix,
         }
 
         // Calculate the gradients on the leaky RELU activation function.
-	dValues = LeakyRELUPrime(dValues, l.Slope)
+	LeakyRELUPrime(dValues, l.Slope)
 
         // Complete the backpropagation process and calculate the gradients.
         it := x.T()
@@ -481,26 +481,64 @@ func (l *SoftmaxLayer) Forward(x Matrix) (Matrix, error) {
         }
 
         // Apply softmax activation for the softmax layer.
-        out = Softmax(out)
+	Softmax(out)
 
         // Return the matrix.
         return out, nil
 }
 
-// Softmax layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
-func (l *SoftmaxLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+// Softmax layer backward pass. Arguments are the INPUT and OUTPUT matricies and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
+func (l *SoftmaxLayer) Backward(x Matrix, yhat Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
         // Check that the input and output matricies are valid.
-        if x.Cols != l.InputSize {
+	if x.Cols != l.InputSize {
                 return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+        if yhat.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
         }
         if dValues.Cols != l.OutputSize {
                 return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
         }
+	if yhat.Rows != dValues.Rows {
+		return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(yhat.Rows, dValues.Rows)
+	}
 
         // Calculate the gradients on the softmax activation function.
-        
+	dValuesPrev := dValues
+	dValues, _ = NewMatrix(dValues.Rows, dValues.Cols)
 
-        // Complete the backpropagation process and calculate the gradients.
+	for i := 0; i < dValues.Rows; i++ {
+		// Calculate the Jacobian matrix of the OUTPUT.
+		// Create a diagonal matrix from a single row of outputs.
+		diag, _ := NewMatrix(yhat.Cols, yhat.Cols)
+		for j := 0; j < yhat.Cols; j++ {
+			diag.M[j][j] = yhat.M[i][j]
+		}
+
+		// Dot the output row with itself, transformed.
+		outputRow, _ := NewMatrixFromSlice([][]float64{yhat.M[i]})
+		outputRow = outputRow.T()
+		outputDot, err := outputRow.Dot(outputRow.T())
+		if err != nil {
+			return Matrix{}, Matrix{}, Matrix{}, err
+		}
+
+		// Subtract the dot matrix from the diagonal matrix.
+		jacobian, err := diag.Sub(outputDot)
+		if err != nil {
+			return Matrix{}, Matrix{}, Matrix{}, err
+		}
+
+		dValuesRow, _ := NewMatrixFromSlice([][]float64{dValuesPrev.M[i]})
+		row, err := jacobian.Dot(dValuesRow.T())
+		if err != nil {
+			return Matrix{}, Matrix{}, Matrix{}, err
+		}
+
+		dValues.SetRow(i, row.T().M[0])
+	}
+
+	// Complete the backpropagation process and calculate the gradients.
         it := x.T()
         wt := l.Weights.T()
         dWeights, err := it.Dot(dValues)
