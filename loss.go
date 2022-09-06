@@ -158,6 +158,7 @@ func (loss *MeanAbsoluteLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
         return dInputs, nil
 }
 
+
 // Cross-entropy loss struct.
 type CrossEntropyLoss struct {
         Size int
@@ -228,3 +229,62 @@ func (loss *CrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
 }
 
 
+// Binary Cross-entropy loss struct.
+type BinaryCrossEntropyLoss struct {
+}
+
+// New binary cross-entropy loss function.
+func NewBinaryCrossEntropyLoss() (BinaryCrossEntropyLoss, error) {
+        // Return the new cross-entropy loss struct.
+        return BinaryCrossEntropyLoss{}, nil
+}
+
+// Binary cross-entropy loss forward pass function.
+func (loss *BinaryCrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, error) {
+        // Check that all the dimensions match up.
+        if yhat.Cols != 1 || y.Cols != 1 {
+                // Find which matrix has incorrect dimensions and return an error.
+                if yhat.Cols != 1 {
+                        return 0, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
+                } else if y.Cols != 1 {
+                        return 0, invalidMatrixDimensionsError(y.Rows, y.Cols)
+                }
+        }
+
+        // Calculate the cross-entropy loss (J = -log(Σ[clip(yhat) * y])).
+        clipped := Clip(yhat)
+
+        sum := float64(0)
+
+        for i := 0; i < yhat.Rows; i++ {
+                // Calculate the loss value for the sample.
+		sum += -(y.M[i][0] * math.Log(clipped.M[i][0]) + (1-y.M[i][0]) * math.Log(1-clipped.M[i][0])) / float64(yhat.Rows)
+        }
+
+        return sum, nil
+}
+
+// Cross-entropy loss backward pass function.
+func (loss *BinaryCrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
+        // Check that all the dimensions match up.
+        if yhat.Cols != 1 || y.Cols != 1 {
+                // Find which matrix has incorrect dimensions and return an error.
+                if yhat.Cols != 1 {
+                        return Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
+                } else if y.Cols != 1 {
+                        return Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
+                }
+        }
+
+	// Clip the predicted values.
+        clipped := Clip(yhat)
+
+        // Calculate the gradient of the cross-entropy loss function.
+        dInputs, _ := NewMatrix(yhat.Rows, 1)
+        for i := 0; i < dInputs.Rows; i++ {
+                dInputs.M[i][0] = -(y.M[i][0] / clipped.M[i][0] - (1 - y.M[i][0]) / (1 - clipped.M[i][0])) / float64(yhat.Rows)
+        }
+
+        // Return the final gradient.
+        return dInputs, nil
+}

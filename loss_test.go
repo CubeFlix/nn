@@ -84,3 +84,29 @@ func TestCrossEntropyLoss(t *testing.T) {
         }
         t.Logf("%v", dInputs)
 }
+
+// Test binary cross-entropy loss function.
+func TestBinaryCrossEntropyLoss(t *testing.T) {
+        // Create the binary cross-entropy loss object.
+        loss, _ := NewBinaryCrossEntropyLoss()
+
+        // Create the matricies.
+        yhat, _ := NewMatrixFromSlice([][]float64{[]float64{0.9}, []float64{0.3}})
+        y, _ := NewMatrixFromSlice([][]float64{[]float64{0}, []float64{2}})
+
+        // Calculate the forward pass.
+        j, err := loss.Forward(yhat, y)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v", j)
+
+        // Calculate the backward pass.
+        dInputs, err := loss.Backward(yhat, y)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v", dInputs)
+}
