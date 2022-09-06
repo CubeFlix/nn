@@ -552,4 +552,44 @@ func (l *SoftmaxLayer) Backward(x Matrix, yhat Matrix, dValues Matrix) (Matrix, 
 
         return dWeights, dBiases, dInputs, nil
 }
-// Softmax+loss layer
+
+// Softmax + categorial cross-entropy loss layer backward pass. Arguments are the input, correct output and output matricies. Ouputs the gradients for the weights, biases, and inputs, respectively.
+func (l *SoftmaxLayer) BackwardCrossEntropy(x Matrix, y Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+        // Check that the input and output matricies are valid.
+        if y.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
+        }
+        if dValues.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
+        }
+        if y.Rows != dValues.Rows {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(y.Rows, dValues.Rows)
+        }
+
+	newValues, _ := NewMatrix(dValues.Rows, dValues.Cols)
+	for i := 0; i < dValues.Rows; i++ {
+		for j := 0; j < dValues.Cols; j++ {
+			if y.M[i][j] == 1 {
+				newValues.M[i][j] = (dValues.M[i][j] - 1)/float64(dValues.Rows)
+			} else {
+				newValues.M[i][j] = dValues.M[i][j]
+			}
+		}
+	}
+
+	// Complete the backpropagation process and calculate the gradients.
+        it := x.T()
+        wt := l.Weights.T()
+        dWeights, err := it.Dot(dValues)
+        if err != nil {
+                return Matrix{}, Matrix{}, Matrix{}, err
+        }
+
+        dBiases := dValues.Sum(0)
+
+        dInputs, err := dValues.Dot(wt)
+
+        return dWeights, dBiases, dInputs, nil
+}
+
+

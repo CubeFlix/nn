@@ -162,3 +162,47 @@ func TestSoftmaxLayer(t *testing.T) {
         }
         t.Logf("%v, %v, %v", dWeights, dBiases, dInputs)
 }
+
+// Test softmax neural network hidden layer with categorical cross-entropy loss forward and backward passes.
+func TestSoftmaxCrossEntropyLayer(t *testing.T) {
+        // Create the layer and the loss.
+        l, _ := NewSoftmaxLayer(3, 5)
+	jl, _ := NewCrossEntropyLoss(5)
+
+        // Initialize the layer.
+        l.Init()
+
+        // Perform the forward pass.
+        x, err := NewMatrixFromSlice([][]float64{[]float64{1, -1, 2}})
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+	y, err := NewMatrixFromSlice([][]float64{[]float64{0, 0, 0, 1, 0}})
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        out, err := l.Forward(x)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v", out)
+
+	// Calculate the loss.
+	loss, err := jl.Forward(out, y)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	t.Logf("%v", loss)
+
+        // Perform the backward pass.
+        dWeights, dBiases, dInputs, err := l.BackwardCrossEntropy(x, y, out)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v, %v, %v", dWeights, dBiases, dInputs)
+}
