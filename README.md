@@ -16,4 +16,4 @@ This project is INCOMPLETE.
 - [ ] add and test optimizers (sgd, adam)
 - [ ] add dropout
 - [ ] try out 'Heavy' network classes (you know which one)
-
+- [ ] try out LSTM and RNNs
