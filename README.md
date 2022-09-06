@@ -10,8 +10,9 @@ This project is INCOMPLETE.
 -----
 
 - [ ] test out categorization (iris dataset)
+- [ ] test out categorization (spiral dataset, nnfs)
 - [x] add softmax classification
-- [ ] add binary cross-entropy loss
+- [x] add binary cross-entropy loss
 - [ ] add and test optimizers (sgd, adam)
 - [ ] add dropout
 - [ ] try out 'Heavy' network classes (you know which one)
