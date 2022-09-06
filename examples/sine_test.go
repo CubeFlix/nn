@@ -27,22 +27,22 @@ func TestSine(t *testing.T) {
 	t.Logf("%v", l.Weights)
 
 	// Learning rate.
-	learningRate := 0.000001
+	learningRate := 0.00001
 
 	// Num of epochs.
-	epochs := 700
+	epochs := 1000
 
 	// Get start time.
 	starttime := time.Now()
 	t.Logf(starttime.String())
 
 	// Create the input data.
-	samples := 500
+	samples := 250
 	X, _ := NewMatrix(samples, 1)
 	Y, _ := NewMatrix(samples, 1)
 	for i := 0; i < samples; i++ {
 		_ = X.Set(i, 0, float64(i)/float64(samples))
-		_ = Y.Set(i, 0, (math.Sin(float64(i)/float64(samples) * 2 * math.Pi) + 1))
+		_ = Y.Set(i, 0, (math.Sin(float64(i)/float64(samples))))
 	}
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(samples, func(i, j int) { X.M[i], X.M[j] = X.M[j], X.M[i]; Y.M[i], Y.M[j] = Y.M[j], Y.M[i] })
@@ -92,6 +92,14 @@ func TestSine(t *testing.T) {
         }
 	if i % 100 == 0 {
                 t.Logf("%f", j)
+		// Calculate accuracy.
+		s := 0
+		for n := 0; n < samples; n++ {
+			if math.Abs(out3.M[n][0] - Y.M[n][0]) < 0.01{
+				s += 1
+			}
+		}
+		t.Logf("%f", float64(s)/float64(samples))
         }
 
 	// Backward passes.
@@ -103,7 +111,7 @@ func TestSine(t *testing.T) {
 	}
 
 	// Scale the gradients down.
-	dValues = dValues.MulScalar(0.005)
+	// dValues = dValues.MulScalar(0.005)
 
 	// Layer 3 backward pass.
 	dWeights, dBiases, dValues, err := l3.Backward(out2, dValues)
