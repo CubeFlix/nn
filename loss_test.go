@@ -88,11 +88,11 @@ func TestCrossEntropyLoss(t *testing.T) {
 // Test binary cross-entropy loss function.
 func TestBinaryCrossEntropyLoss(t *testing.T) {
         // Create the binary cross-entropy loss object.
-        loss, _ := NewBinaryCrossEntropyLoss()
+        loss, _ := NewBinaryCrossEntropyLoss(2)
 
         // Create the matricies.
-        yhat, _ := NewMatrixFromSlice([][]float64{[]float64{0.9}, []float64{0.3}})
-        y, _ := NewMatrixFromSlice([][]float64{[]float64{0}, []float64{2}})
+        yhat, _ := NewMatrixFromSlice([][]float64{[]float64{0.9, 0.12}, []float64{0.3, 0.35}})
+        y, _ := NewMatrixFromSlice([][]float64{[]float64{0, 1}, []float64{1, 1}})
 
         // Calculate the forward pass.
         j, err := loss.Forward(yhat, y)

@@ -231,22 +231,28 @@ func (loss *CrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
 
 // Binary Cross-entropy loss struct.
 type BinaryCrossEntropyLoss struct {
+	Size int
 }
 
 // New binary cross-entropy loss function.
-func NewBinaryCrossEntropyLoss() (BinaryCrossEntropyLoss, error) {
-        // Return the new cross-entropy loss struct.
-        return BinaryCrossEntropyLoss{}, nil
+func NewBinaryCrossEntropyLoss(size int) (BinaryCrossEntropyLoss, error) {
+        if size < 1 {
+                // Invalid size.
+                return BinaryCrossEntropyLoss{}, invalidLossSize(size)
+        }
+
+	// Return the new cross-entropy loss struct.
+        return BinaryCrossEntropyLoss{size}, nil
 }
 
 // Binary cross-entropy loss forward pass function.
 func (loss *BinaryCrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, error) {
         // Check that all the dimensions match up.
-        if yhat.Cols != 1 || y.Cols != 1 {
+        if yhat.Cols != loss.Size || y.Cols != loss.Size {
                 // Find which matrix has incorrect dimensions and return an error.
-                if yhat.Cols != 1 {
+                if yhat.Cols != loss.Size {
                         return 0, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
-                } else if y.Cols != 1 {
+                } else if y.Cols != loss.Size {
                         return 0, invalidMatrixDimensionsError(y.Rows, y.Cols)
                 }
         }
@@ -257,9 +263,11 @@ func (loss *BinaryCrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, err
         sum := float64(0)
 
         for i := 0; i < yhat.Rows; i++ {
-                // Calculate the loss value for the sample.
-		sum += -(y.M[i][0] * math.Log(clipped.M[i][0]) + (1-y.M[i][0]) * math.Log(1-clipped.M[i][0])) / float64(yhat.Rows)
-        }
+                // Calculate the loss value for each sample.
+		for j := 0; j < yhat.Cols; j++ {
+			sum += -(y.M[i][j] * math.Log(clipped.M[i][j]) + (1-y.M[i][j]) * math.Log(1-clipped.M[i][j])) / float64(yhat.Rows)
+		}
+	}
 
         return sum, nil
 }
@@ -267,11 +275,11 @@ func (loss *BinaryCrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, err
 // Cross-entropy loss backward pass function.
 func (loss *BinaryCrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
         // Check that all the dimensions match up.
-        if yhat.Cols != 1 || y.Cols != 1 {
+        if yhat.Cols != loss.Size || y.Cols != loss.Size {
                 // Find which matrix has incorrect dimensions and return an error.
-                if yhat.Cols != 1 {
+                if yhat.Cols != loss.Size {
                         return Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
-                } else if y.Cols != 1 {
+                } else if y.Cols != loss.Size {
                         return Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
                 }
         }
@@ -280,10 +288,12 @@ func (loss *BinaryCrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, err
         clipped := Clip(yhat)
 
         // Calculate the gradient of the cross-entropy loss function.
-        dInputs, _ := NewMatrix(yhat.Rows, 1)
+        dInputs, _ := NewMatrix(yhat.Rows, yhat.Cols)
         for i := 0; i < dInputs.Rows; i++ {
-                dInputs.M[i][0] = -(y.M[i][0] / clipped.M[i][0] - (1 - y.M[i][0]) / (1 - clipped.M[i][0])) / float64(yhat.Rows)
-        }
+		for j := 0; j < dInputs.Cols; j++ {
+			dInputs.M[i][j] = (-(y.M[i][j] / clipped.M[i][j] - (1 - y.M[i][j]) / (1 - clipped.M[i][j])) / float64(loss.Size)) / float64(yhat.Rows)
+		}
+	}
 
         // Return the final gradient.
         return dInputs, nil
