@@ -11,10 +11,6 @@ import (
 	"math/rand"
 )
 
-func ptr(val Matrix, _ error) *Matrix {
-    return &val
-}
-
 func TestSine(t *testing.T) {
 	// Create the layers.
 	l, _ := NewLayer(1, 64)
@@ -26,8 +22,10 @@ func TestSine(t *testing.T) {
 	l3.Init()
 	t.Logf("%v", l.Weights)
 
-	// Learning rate.
-	learningRate := 0.00001
+	// Create the optimizer objects.
+	opt1, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
+        opt2, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
+        opt3, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
 
 	// Num of epochs.
 	epochs := 1000
@@ -38,14 +36,14 @@ func TestSine(t *testing.T) {
 
 	// Create the input data.
 	samples := 250
-	X, _ := NewMatrix(samples, 1)
-	Y, _ := NewMatrix(samples, 1)
+	x, _ := NewMatrix(samples, 1)
+	y, _ := NewMatrix(samples, 1)
 	for i := 0; i < samples; i++ {
-		_ = X.Set(i, 0, float64(i)/float64(samples))
-		_ = Y.Set(i, 0, (math.Sin(float64(i)/float64(samples))))
+		_ = x.Set(i, 0, float64(i)/float64(samples))
+		_ = y.Set(i, 0, (math.Sin(float64(i)/float64(samples))))
 	}
 	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(samples, func(i, j int) { X.M[i], X.M[j] = X.M[j], X.M[i]; Y.M[i], Y.M[j] = Y.M[j], Y.M[i] })
+	rand.Shuffle(samples, func(i, j int) { x.M[i], x.M[j] = x.M[j], x.M[i]; y.M[i], y.M[j] = y.M[j], y.M[i] })
 
 	// Get time.
 	t.Logf(time.Now().String())
@@ -57,6 +55,9 @@ func TestSine(t *testing.T) {
 	gradientsWeightsL3 := Matrix{}
         gradientsBiasesL3 := Matrix{}
 	for i := 0; i < epochs; i++ {
+	for start := 0; start < samples; start+=25 {
+        X, _ := NewMatrixFromSlice(x.M[start:start+25])
+	Y, _ := NewMatrixFromSlice(y.M[start:start+25])
 	// Forward and backward passes.
 
 	// Forward layer 1.
@@ -94,12 +95,12 @@ func TestSine(t *testing.T) {
                 t.Logf("%f", j)
 		// Calculate accuracy.
 		s := 0
-		for n := 0; n < samples; n++ {
+		for n := 0; n < 24; n++ {
 			if math.Abs(out3.M[n][0] - Y.M[n][0]) < 0.01{
 				s += 1
 			}
 		}
-		t.Logf("%f", float64(s)/float64(samples))
+		t.Logf("%f", float64(s)/float64(24))
         }
 
 	// Backward passes.
@@ -110,9 +111,6 @@ func TestSine(t *testing.T) {
 		return
 	}
 
-	// Scale the gradients down.
-	// dValues = dValues.MulScalar(0.005)
-
 	// Layer 3 backward pass.
 	dWeights, dBiases, dValues, err := l3.Backward(out2, dValues)
 	if err != nil {
@@ -121,9 +119,6 @@ func TestSine(t *testing.T) {
 	}
 	gradientsWeightsL3 = dWeights
 	gradientsBiasesL3 = dBiases
-
-	// Scale the gradients down.
-	// dValues = dValues.MulScalar(0.001)
 
 	// Layer 2 backward pass.
 	dWeights, dBiases, dValues, err = l2.Backward(out1, dValues)
@@ -144,36 +139,21 @@ func TestSine(t *testing.T) {
         gradientsBiasesL1 = dBiases
 
 	// Update the the weights and biases based on the gradients.
-	l.Weights = ptr(l.Weights.Sub(gradientsWeightsL1.MulScalar(learningRate)))
+	opt3.Update(l3.Weights, l3.Biases, gradientsWeightsL3, gradientsBiasesL3)
 	if err != nil {
 		t.Errorf(err.Error())
 		return
 	}
-	l.Biases = ptr(l.Biases.Sub(gradientsBiasesL1.MulScalar(learningRate)))
-	if err != nil {
-               t.Errorf(err.Error())
-               return
-        }
-	l2.Weights = ptr(l2.Weights.Sub(gradientsWeightsL2.MulScalar(learningRate)))
-	if err != nil {
-		t.Errorf(err.Error())
-		return
-	}
-	l2.Biases = ptr(l2.Biases.Sub(gradientsBiasesL2.MulScalar(learningRate)))
-	if err != nil {
-		t.Errorf(err.Error())
-		return
-	}
-	l3.Weights = ptr(l3.Weights.Sub(gradientsWeightsL3.MulScalar(learningRate)))
-	if err != nil {
+	opt2.Update(l2.Weights, l2.Biases, gradientsWeightsL2, gradientsBiasesL2)
+        if err != nil {
                 t.Errorf(err.Error())
                 return
         }
-	l3.Biases = ptr(l3.Biases.Sub(gradientsBiasesL3.MulScalar(learningRate)))
-	if err != nil {
+	opt1.Update(l.Weights, l.Biases, gradientsWeightsL1, gradientsBiasesL1)
+        if err != nil {
                 t.Errorf(err.Error())
                 return
         }
-
+	} // Batch loop
 	} // Epoch loop
 }

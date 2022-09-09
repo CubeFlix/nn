@@ -24,6 +24,7 @@ type HiddenLayer struct {
 	OutputSize int
 	Weights    *Matrix
 	Biases     *Matrix
+	reluInputs Matrix
 }
 
 // Create a new hidden layer.
@@ -82,8 +83,11 @@ func (l *HiddenLayer) Forward(x Matrix) (Matrix, error) {
 		}
 	}
 
+	// Save the RELU inputs.
+	l.reluInputs = out
+
 	// Apply RELU activation for the hidden layer.
-	RELU(out)
+	out = RELU(out)
 
 	// Return the matrix.
 	return out, nil
@@ -100,7 +104,7 @@ func (l *HiddenLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix
 	}
 
 	// Calculate the gradients on the RELU activation function.
-	RELUPrime(dValues)
+	dValues = RELUPrime(dValues, l.reluInputs)
 
 	// Complete the backpropagation process and calculate the gradients.
 	it := x.T()
@@ -276,7 +280,7 @@ func (l *SigmoidLayer) Forward(x Matrix) (Matrix, error) {
         }
 
 	// Add the sigmoid activation function.
-	Sigmoid(out)
+	out = Sigmoid(out)
 
         // Return the matrix.
         return out, nil
@@ -293,7 +297,7 @@ func (l *SigmoidLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matri
         }
 
         // Calculate the gradients on the sigmoid activation function.
-        SigmoidPrime(x)
+        dValues = SigmoidPrime(x, dValues)
 
         // Complete the backpropagation process and calculate the gradients.
         it := x.T()
@@ -317,6 +321,7 @@ type LeakyLayer struct {
         Weights    *Matrix
         Biases     *Matrix
 	Slope      float64
+	reluInputs Matrix
 }
 
 // Create a new leaky layer.
@@ -381,8 +386,11 @@ func (l *LeakyLayer) Forward(x Matrix) (Matrix, error) {
                 }
         }
 
+	// Save the RELU inputs.
+	l.reluInputs = out
+
         // Apply leaky RELU activation for the hidden layer.
-        LeakyRELU(out, l.Slope)
+        out = LeakyRELU(out, l.Slope)
 
         // Return the matrix.
         return out, nil
@@ -399,7 +407,7 @@ func (l *LeakyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix,
         }
 
         // Calculate the gradients on the leaky RELU activation function.
-	LeakyRELUPrime(dValues, l.Slope)
+	dValues = LeakyRELUPrime(dValues, l.reluInputs, l.Slope)
 
         // Complete the backpropagation process and calculate the gradients.
         it := x.T()
@@ -481,7 +489,7 @@ func (l *SoftmaxLayer) Forward(x Matrix) (Matrix, error) {
         }
 
         // Apply softmax activation for the softmax layer.
-	Softmax(out)
+	out = Softmax(out)
 
         // Return the matrix.
         return out, nil
@@ -556,7 +564,7 @@ func (l *SoftmaxLayer) Backward(x Matrix, yhat Matrix, dValues Matrix) (Matrix, 
 // Softmax + categorial cross-entropy loss layer backward pass. Arguments are the input, correct output and output matricies. Ouputs the gradients for the weights, biases, and inputs, respectively.
 func (l *SoftmaxLayer) BackwardCrossEntropy(x Matrix, y Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
         // Check that the input and output matricies are valid.
-        if y.Cols != l.OutputSize {
+	if y.Cols != l.OutputSize {
                 return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
         }
         if dValues.Cols != l.OutputSize {
@@ -572,7 +580,7 @@ func (l *SoftmaxLayer) BackwardCrossEntropy(x Matrix, y Matrix, dValues Matrix) 
 			if y.M[i][j] == 1 {
 				newValues.M[i][j] = (dValues.M[i][j] - 1)/float64(dValues.Rows)
 			} else {
-				newValues.M[i][j] = dValues.M[i][j]
+				newValues.M[i][j] = dValues.M[i][j]/float64(dValues.Rows)
 			}
 		}
 	}
@@ -580,14 +588,14 @@ func (l *SoftmaxLayer) BackwardCrossEntropy(x Matrix, y Matrix, dValues Matrix) 
 	// Complete the backpropagation process and calculate the gradients.
         it := x.T()
         wt := l.Weights.T()
-        dWeights, err := it.Dot(dValues)
-        if err != nil {
+        dWeights, err := it.Dot(newValues)
+	if err != nil {
                 return Matrix{}, Matrix{}, Matrix{}, err
         }
 
-        dBiases := dValues.Sum(0)
+        dBiases := newValues.Sum(0)
 
-        dInputs, err := dValues.Dot(wt)
+        dInputs, err := newValues.Dot(wt)
 
         return dWeights, dBiases, dInputs, nil
 }

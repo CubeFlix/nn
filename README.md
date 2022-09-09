@@ -13,7 +13,8 @@ This project is INCOMPLETE.
 - [ ] test out categorization (spiral dataset, nnfs)
 - [x] add softmax classification
 - [x] add binary cross-entropy loss
-- [ ] add and test optimizers (sgd, adam)
+- [x] add and test optimizers (~~sgd~~, ~~Adam~~, RMSProp)
 - [ ] add dropout
+- [ ] add regularization
 - [ ] try out 'Heavy' network classes (you know which one)
 - [ ] try out LSTM and RNNs

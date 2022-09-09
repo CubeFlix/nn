@@ -22,11 +22,11 @@ func RELU(m Matrix) Matrix {
 }
 
 // RELU gradient function.
-func RELUPrime(m Matrix) Matrix {
+func RELUPrime(m Matrix, x Matrix) Matrix {
 	for i := 0; i < m.Rows; i++ {
 		for j := 0; j < m.Cols; j++ {
 			// Calculate the derivatives for RELU (heaviside step function)
-			if m.M[i][j] < 0 {
+			if x.M[i][j] < 0 {
 				m.M[i][j] = 0
 			}
 		}
@@ -51,13 +51,13 @@ func Sigmoid(m Matrix) Matrix {
 }
 
 // Sigmoid gradient function.
-func SigmoidPrime(m Matrix) Matrix {
+func SigmoidPrime(m Matrix, dValues Matrix) Matrix {
 	m = Sigmoid(m)
 
 	for i := 0; i < m.Rows; i++ {
                 for j := 0; j < m.Cols; j++ {
                         // Calculate the derivatives for sigmoid (g(x)(1-g(x)))
-                        m.M[i][j] = m.M[i][j] * (1-m.M[i][j])
+                        m.M[i][j] = dValues.M[i][j] * m.M[i][j] * (1-m.M[i][j])
                 }
         }
 
@@ -82,11 +82,11 @@ func LeakyRELU(m Matrix, slope float64) Matrix {
 
 
 // Leaky RELU gradient function.
-func LeakyRELUPrime(m Matrix, slope float64) Matrix {
+func LeakyRELUPrime(m, x Matrix, slope float64) Matrix {
         for i := 0; i < m.Rows; i++ {
                 for j := 0; j < m.Cols; j++ {
                         // Calculate the derivatives for RELU (heaviside step function)
-                        if m.M[i][j] < 0 {
+                        if x.M[i][j] < 0 {
                                 m.M[i][j] = m.M[i][j] * slope
                         }
                 }
@@ -113,6 +113,3 @@ func Softmax(m Matrix) Matrix {
 	// Return the final matrix.
 	return m
 }
-
-
-// Softmax + loss activation function.

@@ -265,7 +265,7 @@ func (loss *BinaryCrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, err
         for i := 0; i < yhat.Rows; i++ {
                 // Calculate the loss value for each sample.
 		for j := 0; j < yhat.Cols; j++ {
-			sum += -(y.M[i][j] * math.Log(clipped.M[i][j]) + (1-y.M[i][j]) * math.Log(1-clipped.M[i][j])) / float64(yhat.Rows)
+			sum += (-(y.M[i][j] * math.Log(clipped.M[i][j]) + (1-y.M[i][j]) * math.Log(1-clipped.M[i][j])) / float64(yhat.Rows)) / float64(loss.Size)
 		}
 	}
 
