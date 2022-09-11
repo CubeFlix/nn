@@ -155,7 +155,7 @@ func TestSoftmaxLayer(t *testing.T) {
 
         // Perform the backward pass.
         dValues, err := NewMatrixFromSlice([][]float64{[]float64{0.3, 0.1, 0.2, 0.2, 0.2}})
-        dWeights, dBiases, dInputs, err := l.Backward(x, out, dValues)
+        dWeights, dBiases, dInputs, err := l.Backward(x, dValues)
         if err != nil {
                 t.Error(err.Error())
 		return

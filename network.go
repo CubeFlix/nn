@@ -12,9 +12,19 @@ import (
 )
 
 
+// Layer interface.
+type Layer interface {
+	Init()
+	Forward(Matrix)                               (Matrix, error)
+	Backward(Matrix, Matrix)                      (Matrix, Matrix, Matrix, error)
+	GetValues()                                   (Matrix, Matrix, map[string]float64)
+	SetValues(Matrix, Matrix, map[string]float64)
+}
+
+
 // Invalid layer dimensions error.
 func invalidLayerDimensionsError(inputSize, outputSize int) error {
-	return errors.New(fmt.Sprintf("Invalid layer dimensions: %d, %d", inputSize, outputSize))
+	return errors.New(fmt.Sprintf("nn.Layer: Invalid layer dimensions: %d, %d", inputSize, outputSize))
 }
 
 
@@ -45,6 +55,20 @@ func NewLayer(inputSize, outputSize int) (HiddenLayer, error) {
 		Weights:    &weights,
 		Biases:     &biases,
 	}, nil
+}
+
+// Get the values for the layer.
+func (l *HiddenLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(HiddenLayerType)}
+	return *l.Weights, *l.Biases, values
+}
+
+// Set the values for the layer.
+func (l *HiddenLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+	l.InputSize = int(values["inputs"])
+	l.OutputSize = int(values["outputs"])
+	l.Weights = &weights
+	l.Biases = &biases
 }
 
 // Initialize the hidden layer values.
@@ -150,6 +174,20 @@ func NewLinearLayer(inputSize, outputSize int) (LinearLayer, error) {
         }, nil
 }
 
+// Get the values for the layer.
+func (l *LinearLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(LinearLayerType)}
+        return *l.Weights, *l.Biases, values
+}
+
+// Set the values for the layer.
+func (l *LinearLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+        l.InputSize = int(values["inputs"])
+        l.OutputSize = int(values["outputs"])
+        l.Weights = &weights
+        l.Biases = &biases
+}
+
 // Initialize the linear layer values.
 func (l *LinearLayer) Init() {
         // Using He weight initialization. Calculate the std for the weights based on the number of inputs.
@@ -243,6 +281,20 @@ func NewSigmoidLayer(inputSize, outputSize int) (SigmoidLayer, error) {
         }, nil
 }
 
+// Get the values for the layer.
+func (l *SigmoidLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(SigmoidLayerType)}
+        return *l.Weights, *l.Biases, values
+}
+
+// Set the values for the layer.
+func (l *SigmoidLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+        l.InputSize = int(values["inputs"])
+        l.OutputSize = int(values["outputs"])
+        l.Weights = &weights
+        l.Biases = &biases
+}
+
 // Initialize the sigmoid layer values.
 func (l *SigmoidLayer) Init() {
         // Using He weight initialization. Calculate the std for the weights based on the number of inputs.
@@ -333,7 +385,7 @@ func NewLeakyLayer(inputSize, outputSize int, slope float64) (LeakyLayer, error)
 
 	// Check that the slope value is valid
 	if slope < 0 {
-		return LeakyLayer{}, errors.New("Invalid LeakyRELU slope.")
+		return LeakyLayer{}, errors.New("nn.LeakyLayer: Invalid LeakyRELU slope.")
 	}
 
         // Create the new matricies.
@@ -348,6 +400,21 @@ func NewLeakyLayer(inputSize, outputSize int, slope float64) (LeakyLayer, error)
                 Biases:     &biases,
 		Slope:      slope,
         }, nil
+}
+
+// Get the values for the layer.
+func (l *LeakyLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "slope": l.Slope, "type": float64(LeakyLayerType)}
+        return *l.Weights, *l.Biases, values
+}
+
+// Set the values for the layer.
+func (l *LeakyLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+        l.InputSize = int(values["inputs"])
+        l.OutputSize = int(values["outputs"])
+	l.Slope = values["slope"]
+        l.Weights = &weights
+        l.Biases = &biases
 }
 
 // Initialize the leaky layer values.
@@ -430,6 +497,7 @@ type SoftmaxLayer struct {
         OutputSize int
         Weights    *Matrix
         Biases     *Matrix
+	outputs    Matrix
 }
 
 // Create a new softmax layer.
@@ -450,6 +518,20 @@ func NewSoftmaxLayer(inputSize, outputSize int) (SoftmaxLayer, error) {
                 Weights:    &weights,
                 Biases:     &biases,
         }, nil
+}
+
+// Get the values for the layer.
+func (l *SoftmaxLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(SoftmaxLayerType)}
+        return *l.Weights, *l.Biases, values
+}
+
+// Set the values for the layer.
+func (l *SoftmaxLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+        l.InputSize = int(values["inputs"])
+        l.OutputSize = int(values["outputs"])
+        l.Weights = &weights
+        l.Biases = &biases
 }
 
 // Initialize the softmax layer values.
@@ -491,24 +573,27 @@ func (l *SoftmaxLayer) Forward(x Matrix) (Matrix, error) {
         // Apply softmax activation for the softmax layer.
 	out = Softmax(out)
 
-        // Return the matrix.
+        // Save the outputs.
+	l.outputs = out
+
+	// Return the matrix.
         return out, nil
 }
 
-// Softmax layer backward pass. Arguments are the INPUT and OUTPUT matricies and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
-func (l *SoftmaxLayer) Backward(x Matrix, yhat Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+// Softmax layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
+func (l *SoftmaxLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
         // Check that the input and output matricies are valid.
 	if x.Cols != l.InputSize {
                 return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
         }
-        if yhat.Cols != l.OutputSize {
-                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
+        if l.outputs.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(l.outputs.Rows, l.outputs.Cols)
         }
         if dValues.Cols != l.OutputSize {
                 return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
         }
-	if yhat.Rows != dValues.Rows {
-		return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(yhat.Rows, dValues.Rows)
+	if l.outputs.Rows != dValues.Rows {
+		return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(l.outputs.Rows, dValues.Rows)
 	}
 
         // Calculate the gradients on the softmax activation function.
@@ -518,13 +603,13 @@ func (l *SoftmaxLayer) Backward(x Matrix, yhat Matrix, dValues Matrix) (Matrix, 
 	for i := 0; i < dValues.Rows; i++ {
 		// Calculate the Jacobian matrix of the OUTPUT.
 		// Create a diagonal matrix from a single row of outputs.
-		diag, _ := NewMatrix(yhat.Cols, yhat.Cols)
-		for j := 0; j < yhat.Cols; j++ {
-			diag.M[j][j] = yhat.M[i][j]
+		diag, _ := NewMatrix(l.outputs.Cols, l.outputs.Cols)
+		for j := 0; j < l.outputs.Cols; j++ {
+			diag.M[j][j] = l.outputs.M[i][j]
 		}
 
 		// Dot the output row with itself, transformed.
-		outputRow, _ := NewMatrixFromSlice([][]float64{yhat.M[i]})
+		outputRow, _ := NewMatrixFromSlice([][]float64{l.outputs.M[i]})
 		outputRow = outputRow.T()
 		outputDot, err := outputRow.Dot(outputRow.T())
 		if err != nil {

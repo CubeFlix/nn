@@ -105,12 +105,9 @@ func TestSGDOptimizer(t *testing.T) {
                 }
 
 		if i % 100 == 0 {
-			avgJ := float64(0)
-			for n := 0; n < samples; n++ {
-				avgJ += j.M[n][0] / float64(samples)
-			}
-			t.Logf("%v", avgJ)
-		}
+                        t.Logf("%f", j)
+                }
+
 		if i == epochs - 1 {
 			t.Logf("%v", out3)
 		}
@@ -213,11 +210,7 @@ func TestAdamOptimizer(t *testing.T) {
                 }
 
 		if i % 100 == 0 {
-			avgJ := float64(0)
-			for n := 0; n < samples; n++ {
-				avgJ += j.M[n][0] / float64(samples)
-			}
-			t.Logf("%v", avgJ)
+			t.Logf("%f", j)
 		}
 
                 if i == epochs - 1 {

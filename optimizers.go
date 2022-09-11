@@ -26,13 +26,13 @@ type SGDOptimizer struct {
 func NewSGDOptimizer(learningRate, decay, momentum float64) (SGDOptimizer, error) {
 	// Check that the optimizer values are valid.
 	if learningRate <= 0 {
-		return SGDOptimizer{}, errors.New(fmt.Sprintf("Invalid learning rate: %f", learningRate))
+		return SGDOptimizer{}, errors.New(fmt.Sprintf("nn.SGDOptimizer: Invalid learning rate: %f", learningRate))
 	}
 	if decay < 0 {
-		return SGDOptimizer{}, errors.New(fmt.Sprintf("Invalid decay: %f", decay))
+		return SGDOptimizer{}, errors.New(fmt.Sprintf("nn.SGDOptimizer: Invalid decay: %f", decay))
 	}
 	if momentum < 0 {
-		return SGDOptimizer{}, errors.New(fmt.Sprintf("Invalid momentum: %f", momentum))
+		return SGDOptimizer{}, errors.New(fmt.Sprintf("nn.SGDOptimizer: Invalid momentum: %f", momentum))
 	}
 
 	// Create the new SGD optimizer object.
@@ -136,10 +136,10 @@ type AdamOptimizer struct {
 func NewAdamOptimizer(learningRate, decay, epsilon, beta1, beta2 float64) (AdamOptimizer, error) {
         // Check that the optimizer values are valid.
         if learningRate <= 0 {
-                return AdamOptimizer{}, errors.New(fmt.Sprintf("Invalid learning rate: %f", learningRate))
+                return AdamOptimizer{}, errors.New(fmt.Sprintf("nn.AdamOptimizer: Invalid learning rate: %f", learningRate))
         }
         if decay < 0 {
-                return AdamOptimizer{}, errors.New(fmt.Sprintf("Invalid decay: %f", decay))
+                return AdamOptimizer{}, errors.New(fmt.Sprintf("nn.AdamOptimizer: Invalid decay: %f", decay))
         }
 
         // Create the new Adam optimizer object.

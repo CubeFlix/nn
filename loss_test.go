@@ -74,7 +74,7 @@ func TestCrossEntropyLoss(t *testing.T) {
                 t.Error(err.Error())
                 return
         }
-        t.Logf("%v", j)
+        t.Logf("%f", j)
 
         // Calculate the backward pass.
         dInputs, err := loss.Backward(yhat, y)

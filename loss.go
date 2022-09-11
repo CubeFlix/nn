@@ -10,8 +10,15 @@ import (
 )
 
 
+// Loss interface.
+type Loss interface {
+	Forward(Matrix, Matrix)  (float64, error)
+	Backward(Matrix, Matrix) (Matrix, error)
+}
+
+
 func invalidLossSize(size int) error {
-	return errors.New(fmt.Sprintf("Invalid loss input size: %d", size))
+	return errors.New(fmt.Sprintf("nn.Loss: Invalid loss input size: %d", size))
 }
 
 
@@ -176,14 +183,14 @@ func NewCrossEntropyLoss(size int) (CrossEntropyLoss, error) {
 }
 
 // Cross-entropy loss forward pass function.
-func (loss *CrossEntropyLoss) Forward(yhat Matrix, y Matrix) (Matrix, error) {
+func (loss *CrossEntropyLoss) Forward(yhat Matrix, y Matrix) (float64, error) {
         // Check that all the dimensions match up.
         if yhat.Cols != loss.Size || y.Cols != loss.Size {
                 // Find which matrix has incorrect dimensions and return an error.
                 if yhat.Cols != loss.Size {
-                        return Matrix{}, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
+                        return 0, invalidMatrixDimensionsError(yhat.Rows, yhat.Cols)
                 } else if y.Cols != loss.Size {
-                        return Matrix{}, invalidMatrixDimensionsError(y.Rows, y.Cols)
+                        return 0, invalidMatrixDimensionsError(y.Rows, y.Cols)
                 }
         }
 
@@ -201,7 +208,14 @@ func (loss *CrossEntropyLoss) Forward(yhat Matrix, y Matrix) (Matrix, error) {
 		likelihoods.M[i][0] = -math.Log(sum)
         }
 
-        return likelihoods, nil
+	sum := float64(0)
+
+	// Calculate the average loss.
+	for i := 0; i < likelihoods.Rows; i++ {
+		sum += likelihoods.M[i][0] / float64(likelihoods.Rows)
+	}
+
+        return sum, nil
 }
 
 // Cross-entropy loss backward pass function.

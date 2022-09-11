@@ -12,17 +12,17 @@ import (
 
 // Invalid matrix dimensions error function.
 func invalidMatrixDimensionsError(rows int, cols int) error {
-	return errors.New(fmt.Sprintf("Invalid matrix dimensions: %d, %d", rows, cols))
+	return errors.New(fmt.Sprintf("nn.Matrix: Invalid matrix dimensions: %d, %d", rows, cols))
 }
 
 // Invalid matrix index error function.
 func invalidMatrixIndexError(row int, col int) error {
-	return errors.New(fmt.Sprintf("Invalid index for matrix: %d, %d", row, col))
+	return errors.New(fmt.Sprintf("nn.Matrix: Invalid index for matrix: %d, %d", row, col))
 }
 
 // Invalid slice dimensions error function.
 func invalidSliceDimensionsError(length int) error {
-	return errors.New(fmt.Sprintf("Invalid slice dimensions: %d", length))
+	return errors.New(fmt.Sprintf("nn.Matrix: Invalid slice dimensions: %d", length))
 }
 
 
@@ -359,7 +359,7 @@ func (m *Matrix) T() Matrix {
 func (m *Matrix) Sum(axis int) Matrix {
 	// Check that the axis is valid.
 	if axis != 0 && axis != 1 {
-		panic(fmt.Sprintf("Invalid for sum axis: %d", axis))
+		panic(fmt.Sprintf("nn.Matrix: Invalid for sum axis: %d", axis))
 	}
 
 	// Check the axis.
