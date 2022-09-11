@@ -5,7 +5,7 @@ Layer data buffer implementation details.
 Each layer will be encoded as such:
 
 | Name and value               | Size    | Type   |
-| ---------------------------- | ------- | int    |
+| ---------------------------- | ------- | ------ |
 | Layer type                   | 1 byte  | int    |
 | Input size                   | 4 bytes | int    |
 | Output size                  | 4 bytes | int    |
