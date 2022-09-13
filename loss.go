@@ -12,8 +12,10 @@ import (
 
 // Loss interface.
 type Loss interface {
-	Forward(Matrix, Matrix)  (float64, error)
-	Backward(Matrix, Matrix) (Matrix, error)
+	getValues()                   map[string]float64
+	setValues(int)
+	Forward(Matrix, Matrix)       (float64, error)
+	Backward(Matrix, Matrix)      (Matrix, error)
 }
 
 
@@ -25,6 +27,16 @@ func invalidLossSize(size int) error {
 // Mean squared error loss struct.
 type MeanSquaredLoss struct {
 	Size int
+}
+
+// Get loss values.
+func (loss *MeanSquaredLoss) getValues() map[string]float64 {
+	return map[string]float64{"size": float64(loss.Size), "type": float64(MeanSquaredLossType)}
+}
+
+// Set loss values.
+func (loss *MeanSquaredLoss) setValues(size int) {
+	loss.Size = size
 }
 
 // New mean squared loss function.
@@ -92,6 +104,16 @@ func (loss *MeanSquaredLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
 // Mean absolute error loss struct.
 type MeanAbsoluteLoss struct {
         Size int
+}
+
+// Get loss values.
+func (loss *MeanAbsoluteLoss) getValues() map[string]float64 {
+        return map[string]float64{"size": float64(loss.Size), "type": float64(MeanAbsoluteLossType)}
+}
+
+// Set loss values.
+func (loss *MeanAbsoluteLoss) setValues(size int) {
+        loss.Size = size
 }
 
 // New mean absolute loss function.
@@ -171,6 +193,16 @@ type CrossEntropyLoss struct {
         Size int
 }
 
+// Get loss values.
+func (loss *CrossEntropyLoss) getValues() map[string]float64 {
+        return map[string]float64{"size": float64(loss.Size), "type": float64(CrossEntropyLossType)}
+}
+
+// Set loss values.
+func (loss *CrossEntropyLoss) setValues(size int) {
+        loss.Size = size
+}
+
 // New cross-entropy loss function.
 func NewCrossEntropyLoss(size int) (CrossEntropyLoss, error) {
         if size < 1 {
@@ -246,6 +278,16 @@ func (loss *CrossEntropyLoss) Backward(yhat Matrix, y Matrix) (Matrix, error) {
 // Binary Cross-entropy loss struct.
 type BinaryCrossEntropyLoss struct {
 	Size int
+}
+
+// Get loss values.
+func (loss *BinaryCrossEntropyLoss) getValues() map[string]float64 {
+        return map[string]float64{"size": float64(loss.Size), "type": float64(BinaryCrossEntropyLossType)}
+}
+
+// Set loss values.
+func (loss *BinaryCrossEntropyLoss) setValues(size int) {
+        loss.Size = size
 }
 
 // New binary cross-entropy loss function.

@@ -5,7 +5,6 @@ package nn
 import (
 	"testing"
 	"bytes"
-	"fmt"
 )
 
 
@@ -25,5 +24,5 @@ func TestLayerData(t *testing.T) {
 		t.Errorf(err.Error())
 		return
 	}
-	fmt.Printf("%v", layer.(*HiddenLayer).Weights)
+	t.Logf("%v", layer.(*HiddenLayer).Weights)
 }

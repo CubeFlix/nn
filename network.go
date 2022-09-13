@@ -17,8 +17,8 @@ type Layer interface {
 	Init()
 	Forward(Matrix)                               (Matrix, error)
 	Backward(Matrix, Matrix)                      (Matrix, Matrix, Matrix, error)
-	GetValues()                                   (Matrix, Matrix, map[string]float64)
-	SetValues(Matrix, Matrix, map[string]float64)
+	getValues()                                   (*Matrix, *Matrix, map[string]float64)
+	setValues(Matrix, Matrix, map[string]float64)
 }
 
 
@@ -58,13 +58,13 @@ func NewLayer(inputSize, outputSize int) (HiddenLayer, error) {
 }
 
 // Get the values for the layer.
-func (l *HiddenLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+func (l *HiddenLayer) getValues() (*Matrix, *Matrix, map[string]float64) {
 	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(HiddenLayerType)}
-	return *l.Weights, *l.Biases, values
+	return l.Weights, l.Biases, values
 }
 
 // Set the values for the layer.
-func (l *HiddenLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+func (l *HiddenLayer) setValues(weights, biases Matrix, values map[string]float64) {
 	l.InputSize = int(values["inputs"])
 	l.OutputSize = int(values["outputs"])
 	l.Weights = &weights
@@ -175,13 +175,13 @@ func NewLinearLayer(inputSize, outputSize int) (LinearLayer, error) {
 }
 
 // Get the values for the layer.
-func (l *LinearLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+func (l *LinearLayer) getValues() (*Matrix, *Matrix, map[string]float64) {
 	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(LinearLayerType)}
-        return *l.Weights, *l.Biases, values
+        return l.Weights, l.Biases, values
 }
 
 // Set the values for the layer.
-func (l *LinearLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+func (l *LinearLayer) setValues(weights, biases Matrix, values map[string]float64) {
         l.InputSize = int(values["inputs"])
         l.OutputSize = int(values["outputs"])
         l.Weights = &weights
@@ -282,13 +282,13 @@ func NewSigmoidLayer(inputSize, outputSize int) (SigmoidLayer, error) {
 }
 
 // Get the values for the layer.
-func (l *SigmoidLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+func (l *SigmoidLayer) getValues() (*Matrix, *Matrix, map[string]float64) {
 	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(SigmoidLayerType)}
-        return *l.Weights, *l.Biases, values
+        return l.Weights, l.Biases, values
 }
 
 // Set the values for the layer.
-func (l *SigmoidLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+func (l *SigmoidLayer) setValues(weights, biases Matrix, values map[string]float64) {
         l.InputSize = int(values["inputs"])
         l.OutputSize = int(values["outputs"])
         l.Weights = &weights
@@ -403,13 +403,13 @@ func NewLeakyLayer(inputSize, outputSize int, slope float64) (LeakyLayer, error)
 }
 
 // Get the values for the layer.
-func (l *LeakyLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+func (l *LeakyLayer) getValues() (*Matrix, *Matrix, map[string]float64) {
 	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "slope": l.Slope, "type": float64(LeakyLayerType)}
-        return *l.Weights, *l.Biases, values
+        return l.Weights, l.Biases, values
 }
 
 // Set the values for the layer.
-func (l *LeakyLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+func (l *LeakyLayer) setValues(weights, biases Matrix, values map[string]float64) {
         l.InputSize = int(values["inputs"])
         l.OutputSize = int(values["outputs"])
 	l.Slope = values["slope"]
@@ -521,13 +521,13 @@ func NewSoftmaxLayer(inputSize, outputSize int) (SoftmaxLayer, error) {
 }
 
 // Get the values for the layer.
-func (l *SoftmaxLayer) GetValues() (Matrix, Matrix, map[string]float64) {
+func (l *SoftmaxLayer) getValues() (*Matrix, *Matrix, map[string]float64) {
 	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(SoftmaxLayerType)}
-        return *l.Weights, *l.Biases, values
+        return l.Weights, l.Biases, values
 }
 
 // Set the values for the layer.
-func (l *SoftmaxLayer) SetValues(weights, biases Matrix, values map[string]float64) {
+func (l *SoftmaxLayer) setValues(weights, biases Matrix, values map[string]float64) {
         l.InputSize = int(values["inputs"])
         l.OutputSize = int(values["outputs"])
         l.Weights = &weights

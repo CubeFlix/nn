@@ -37,7 +37,7 @@ type SavedLayerData struct {
 // Create a new savedLayerData object from a layer.
 func NewSavedLayerData(layer Layer) SavedLayerData {
 	// Get the values from the layer interface.
-	weights, biases, values := layer.GetValues()
+	weights, biases, values := layer.getValues()
 
 	// Return the new saved layer data object
 	return SavedLayerData {
@@ -45,8 +45,8 @@ func NewSavedLayerData(layer Layer) SavedLayerData {
 		Inputs:  int(values["inputs"]),
 		Outputs: int(values["outputs"]),
 		Slope:   values["slope"],
-		Weights: weights,
-		Biases:  biases,
+		Weights: *weights,
+		Biases:  *biases,
 	}
 }
 
@@ -59,6 +59,9 @@ func (l *SavedLayerData) SerializeLayer(buf *bytes.Buffer) error {
 	if l.Biases.Rows != 1 || l.Biases.Cols != l.Outputs {
                 return invalidLayerDimensionsError(l.Inputs, l.Outputs)
         }
+
+	// Write the magic bytes.
+	buf.WriteString("LA")
 
 	// Write the layer type to the buffer.
 	err := binary.Write(buf, binary.LittleEndian, l.Type)
@@ -108,9 +111,20 @@ func (l *SavedLayerData) SerializeLayer(buf *bytes.Buffer) error {
 
 // Load a layer buffer into a saved layer data object.
 func loadLayerBuffer(buf *bytes.Buffer) (SavedLayerData, error) {
+	// Read the magic bytes.
+	magic := make([]byte, 2)
+	_, err := buf.Read(magic)
+	if err != nil {
+		return SavedLayerData{}, err
+	}
+	if string(magic) != "LA" {
+		// Invalid magic bytes.
+		return SavedLayerData{}, errors.New("nn.LoadLayer: Invalid magic bytes. Check that the data is not corrupted.")
+	}
+
 	// Read the layer type.
 	var layerType int8
-	err := binary.Read(buf, binary.LittleEndian, &layerType)
+	err = binary.Read(buf, binary.LittleEndian, &layerType)
 	if err != nil {
 		return SavedLayerData{}, err
 	}

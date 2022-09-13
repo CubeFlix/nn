@@ -9,6 +9,34 @@ import (
 	"math"
 )
 
+
+// Optimizer interface.
+type Optimizer interface {
+	getValues()                              map[string]float64
+	setValues(map[string]float64)
+	Update(*Matrix, *Matrix, Matrix, Matrix) error
+}
+
+
+// New optimizer from values and type.
+func NewOptimizerFromType(optimizerType OptimizerType, values map[string]float64) (Optimizer, error) {
+	if optimizerType == SGDOptimizerType {
+		// Create a SGD optimizer.
+		o := SGDOptimizer{currentRate: values["learningRate"], useDecay: (values["decay"] != 0), useMomentum: (values["momentum"] != 0)}
+		o.setValues(values)
+		return &o, nil
+	} else if optimizerType == AdamOptimizerType {
+		// Create an Adam optimizer.
+		o := AdamOptimizer{currentRate: values["learningRate"], useDecay: (values["decay"] != 0), useMomentum: (values["momentum"] != 0)}
+		o.setValues(values)
+		return &o, nil
+	}
+
+	// Return an error.
+	return nil, errors.New("nn.Optimizer: Invalid optimizer type.")
+}
+
+
 // Stochastic gradient descent optimizer object. Can handle a single layer.
 type SGDOptimizer struct {
 	LearningRate    float64
@@ -20,6 +48,23 @@ type SGDOptimizer struct {
 	biasMomentums   Matrix
 	useDecay        bool
 	useMomentum     bool
+}
+
+// Get the optimizer values.
+func (optimizer *SGDOptimizer) getValues() (map[string]float64) {
+	return map[string]float64{
+		"learningRate": optimizer.LearningRate,
+		"decay":        optimizer.Decay,
+		"momentum":     optimizer.Momentum,
+		"type":         float64(SGDOptimizerType),
+	}
+}
+
+// Set the optimizer values.
+func (optimizer *SGDOptimizer) setValues(values map[string]float64) {
+	optimizer.LearningRate = values["learningRate"]
+	optimizer.Decay = values["decay"]
+	optimizer.Momentum = values["momentum"]
 }
 
 // Create a new SGD optimizer object.
@@ -130,6 +175,27 @@ type AdamOptimizer struct {
 	biasCache       Matrix
         useDecay        bool
         useMomentum     bool
+}
+
+// Get the optimizer values.
+func (optimizer *AdamOptimizer) getValues() (map[string]float64) {
+        return map[string]float64{
+                "learningRate": optimizer.LearningRate,
+                "decay":        optimizer.Decay,
+                "epsilon":      optimizer.Epsilon,
+		"beta1":        optimizer.Beta1,
+		"beta2":        optimizer.Beta2,
+		"type":         float64(AdamOptimizerType),
+	}
+}
+
+// Set the optimizer values.
+func (optimizer *AdamOptimizer) setValues(values map[string]float64) {
+        optimizer.LearningRate = values["learningRate"]
+        optimizer.Decay = values["decay"]
+        optimizer.Epsilon = values["epsilon"]
+	optimizer.Beta1 = values["beta1"]
+	optimizer.Beta2 = values["beta2"]
 }
 
 // Create a new Adam optimizer object.
