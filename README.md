@@ -6,7 +6,7 @@ A simple neural network in Go.
 
 The project is split into several files, each one responsible for a specific part of the network. However, the three main files are `network.go`, which contains the main code for the layers and activation functions. `matrix.go` contains the code for the custom matrix system. Finally, `model.go` contains code for `Model` objects and bundles the entire project together.
 
-Currently (as of 9/3/22) the only full neural network test for `nn` is in `sine_test.go`, which models regression for a sine wave.
+Currently (as of 9/14/22) the only two full neural network examples are "sine_test.go" and "iris_test.go".
 
 This project is INCOMPLETE, but in a usable state.
 -----
