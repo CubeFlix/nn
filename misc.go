@@ -56,6 +56,23 @@ func RowMax(X Matrix) Matrix {
 }
 
 
+// Return the output values for binary categorization.
+func OutputBinaryValues(X Matrix) Matrix {
+	for i := 0; i < X.Rows; i++ {
+		for j := 0; j < X.Cols; j++ {
+			if X.M[i][j] < 0.5 {
+				X.M[i][j] = 0
+			} else {
+				X.M[i][j] = 1
+			}
+		}
+	}
+
+	// Return the output matrix.
+	return X
+}
+
+
 // Shuffle the X and Y matricies.
 func ShuffleDataset(X, Y Matrix) (Matrix, Matrix) {
 	// Seed the random number generator.

@@ -36,8 +36,9 @@ type AccuracyType int8
 
 // Accuracy types and codes.
 const (
-        RegressionAccuracyType  AccuracyType = 0
-	CategoricalAccuracyType              = 1
+        RegressionAccuracyType        AccuracyType = 0
+	CategoricalAccuracyType                    = 1
+	BinaryCategoricalAccuracyType              = 2
 )
 
 
@@ -319,6 +320,8 @@ func (m *Model) CalculateAccuracy(X, Y Matrix) (float64, error) {
 		return RegressionAccuracy(outputs[m.ModelSize], Y, m.AccuracyPercision), nil
 	} else if m.AccuracyType == CategoricalAccuracyType {
 		return CategoricalAccuracy(outputs[m.ModelSize], Y), nil
+	} else if m.AccuracyType == BinaryCategoricalAccuracyType {
+		return BinaryCategoricalAccuracy(outputs[m.ModelSize], Y), nil
 	}
 	return 0, errors.New("nn.Model: Invalid accuracy type.")
 }
@@ -336,7 +339,9 @@ func (m *Model) Predict(X Matrix) (Matrix, error) {
                 return outputs[m.ModelSize], nil
         } else if m.AccuracyType == CategoricalAccuracyType {
                 return RowMax(outputs[m.ModelSize]), nil
-        }
+        } else if m.AccuracyType == BinaryCategoricalAccuracyType {
+		return OutputBinaryValues(outputs[m.ModelSize]), nil
+	}
 	return Matrix{}, errors.New("nn.Model: Invalid accuracy type.")
 }
 

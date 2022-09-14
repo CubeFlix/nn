@@ -45,6 +45,22 @@ func TestRowMax(t *testing.T) {
 }
 
 
+// Test the output binary values function.
+func TestOutputBinaryValues(t *testing.T) {
+	// Create a new matrix.
+        m, _ := NewMatrixFromSlice([][]float64{[]float64{0.2}, []float64{0.1}, []float64{0.9}, []float64{0.78}})
+
+	// Get the output values.
+	o := OutputBinaryValues(m)
+
+	// Check that the values are correct.
+	if o.M[2][0] != 1 || o.M[0][0] != 0 {
+		t.Errorf("Invalid output values.")
+		return
+	}
+}
+
+
 // Test shuffling matricies.
 func TestShuffleDataset(t *testing.T) {
 	// Create the matricies.
