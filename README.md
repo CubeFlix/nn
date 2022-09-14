@@ -11,8 +11,8 @@ Currently (as of 9/3/22) the only full neural network test for `nn` is in `sine_
 This project is INCOMPLETE, but in a usable state.
 -----
 
-- [x] binary cross-entropy accuracy
-- [ ] test out categorization (iris dataset)
+- [x] binary categorical accuracy
+- [x] test out categorization (iris dataset)
 - [ ] test out categorization (spiral dataset, nnfs)
 - [x] saving and loading models
 - [x] add softmax classification
