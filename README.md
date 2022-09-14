@@ -8,11 +8,12 @@ The project is split into several files, each one responsible for a specific par
 
 Currently (as of 9/3/22) the only full neural network test for `nn` is in `sine_test.go`, which models regression for a sine wave.
 
-This project is INCOMPLETE.
+This project is INCOMPLETE, but in a usable state.
 -----
 
 - [ ] test out categorization (iris dataset)
 - [ ] test out categorization (spiral dataset, nnfs)
+- [x] saving and loading models
 - [x] add softmax classification
 - [x] add binary cross-entropy loss
 - [x] add and test optimizers (~~sgd~~, ~~Adam~~, RMSProp)

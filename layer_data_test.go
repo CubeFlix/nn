@@ -1,4 +1,5 @@
 // layer_data_test.go
+// Layer data test.
 
 package nn
 

@@ -34,13 +34,13 @@ type SavedLayerData struct {
 	Biases  Matrix
 }
 
-// Create a new savedLayerData object from a layer.
+// Create a new SavedLayerData object from a layer.
 func NewSavedLayerData(layer Layer) SavedLayerData {
 	// Get the values from the layer interface.
 	weights, biases, values := layer.getValues()
 
 	// Return the new saved layer data object
-	return SavedLayerData {
+	return SavedLayerData{
 		Type:    LayerType(values["type"]),
 		Inputs:  int(values["inputs"]),
 		Outputs: int(values["outputs"]),
