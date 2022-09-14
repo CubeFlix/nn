@@ -6,6 +6,8 @@ package nn
 
 import (
 	"errors"
+	"time"
+	"math/rand"
 )
 
 
@@ -51,4 +53,20 @@ func RowMax(X Matrix) Matrix {
 
 	// Return the output matrix.
 	return ans
+}
+
+
+// Shuffle the X and Y matricies.
+func ShuffleDataset(X, Y Matrix) (Matrix, Matrix) {
+	// Seed the random number generator.
+	rand.Seed(time.Now().UnixNano())
+
+	// Shuffle the matricies.
+	rand.Shuffle(X.Rows, func(i, j int) {
+		X.M[i], X.M[j] = X.M[j], X.M[i]
+		Y.M[i], Y.M[j] = Y.M[j], Y.M[i]
+	})
+
+	// Return the output matricies.
+	return X, Y
 }

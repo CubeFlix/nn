@@ -43,3 +43,14 @@ func TestRowMax(t *testing.T) {
 		return
 	}
 }
+
+
+// Test shuffling matricies.
+func TestShuffleDataset(t *testing.T) {
+	// Create the matricies.
+	X, _ := NewMatrixFromSlice([][]float64{[]float64{1}, []float64{3}, []float64{0}, []float64{2}})
+	Y, _ := NewMatrixFromSlice([][]float64{[]float64{3}, []float64{4}, []float64{6}, []float64{7}})
+
+	// Shuffle the matricies.
+	X, Y = ShuffleDataset(X, Y)
+}
