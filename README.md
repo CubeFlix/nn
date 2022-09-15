@@ -13,13 +13,13 @@ This project is INCOMPLETE, but in a usable state.
 
 - [x] binary categorical accuracy
 - [x] test out categorization (iris dataset)
-- [ ] test out categorization (spiral dataset, nnfs)
+- [ ] test out categorization (spiral dataset, nnfs, dropout)
 - [x] saving and loading models
 - [x] add softmax classification
 - [x] add binary cross-entropy loss
 - [x] add and test optimizers (~~sgd~~, ~~Adam~~, RMSProp)
 - [x] full model object
-- [ ] add dropout
+- [x] add dropout
 - [ ] add regularization
 - [ ] try out 'Heavy' network classes (you know which one)
 - [ ] try out LSTM and RNNs

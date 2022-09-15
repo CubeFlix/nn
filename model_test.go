@@ -32,7 +32,7 @@ func TestModel(t *testing.T) {
 	// Run a forward and backward pass.
 	X, _ := NewMatrixFromSlice([][]float64{[]float64{1, 2, 3}})
 	Y, _ := NewMatrixFromSlice([][]float64{[]float64{0.5}})
-	out, err := m.Forward(X)
+	out, err := m.Forward(X, false)
 	if err != nil {
 		t.Errorf(err.Error())
 		return

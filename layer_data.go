@@ -21,6 +21,7 @@ const (
 	SigmoidLayerType           = 2
 	LeakyLayerType             = 3
 	SoftmaxLayerType           = 4
+	DropoutLayerType           = 5
 )
 
 
@@ -30,6 +31,7 @@ type SavedLayerData struct {
 	Inputs  int
 	Outputs int
 	Slope   float64
+	Dropout float64
 	Weights Matrix
 	Biases  Matrix
 }
@@ -45,6 +47,7 @@ func NewSavedLayerData(layer Layer) SavedLayerData {
 		Inputs:  int(values["inputs"]),
 		Outputs: int(values["outputs"]),
 		Slope:   values["slope"],
+		Dropout: values["dropout"],
 		Weights: *weights,
 		Biases:  *biases,
 	}
@@ -82,6 +85,12 @@ func (l *SavedLayerData) SerializeLayer(buf *bytes.Buffer) error {
 	// Write the optional slope into the buffer.
 	err = binary.Write(buf, binary.LittleEndian, l.Slope)
 	if err != nil {
+                return err
+        }
+
+	// Write the optional dropout into the buffer.
+        err = binary.Write(buf, binary.LittleEndian, l.Dropout)
+        if err != nil {
                 return err
         }
 
@@ -147,6 +156,13 @@ func loadLayerBuffer(buf *bytes.Buffer) (SavedLayerData, error) {
                 return SavedLayerData{}, err
         }
 
+	// Read the optional slope value.
+        var dropout float64
+        err = binary.Read(buf, binary.LittleEndian, &dropout)
+        if err != nil {
+                return SavedLayerData{}, err
+        }
+
 	// Read the weight matrix.
 	weights, err := NewMatrix(int(inputSize), int(outputSize))
 	if err != nil {
@@ -179,6 +195,7 @@ func loadLayerBuffer(buf *bytes.Buffer) (SavedLayerData, error) {
 		Inputs:  int(inputSize),
 		Outputs: int(outputSize),
 		Slope:   slope,
+		Dropout: dropout,
 		Weights: weights,
 		Biases:  biases,
 	}, nil
@@ -227,6 +244,14 @@ func LoadLayer(buf *bytes.Buffer) (Layer, error) {
                         return &SoftmaxLayer{
                                 InputSize:  savedLayerData.Inputs,
                                 OutputSize: savedLayerData.Outputs,
+                                Weights:    &savedLayerData.Weights,
+                                Biases:     &savedLayerData.Biases,
+                        }, nil
+		case DropoutLayerType:
+			return &DropoutLayer{
+                                InputSize:  savedLayerData.Inputs,
+                                OutputSize: savedLayerData.Outputs,
+                                Dropout:    savedLayerData.Dropout,
                                 Weights:    &savedLayerData.Weights,
                                 Biases:     &savedLayerData.Biases,
                         }, nil

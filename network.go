@@ -253,6 +253,7 @@ func (l *LinearLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix
         return dWeights, dBiases, dInputs, nil
 }
 
+
 // Main sigmoid neural network layer struct.
 type SigmoidLayer struct {
         InputSize  int
@@ -365,6 +366,7 @@ func (l *SigmoidLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matri
 
         return dWeights, dBiases, dInputs, nil
 }
+
 
 // Main leaky RELU neural network layer struct.
 type LeakyLayer struct {
@@ -490,6 +492,7 @@ func (l *LeakyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix,
 
         return dWeights, dBiases, dInputs, nil
 }
+
 
 // Main softmax neural network layer struct.
 type SoftmaxLayer struct {
@@ -686,3 +689,175 @@ func (l *SoftmaxLayer) BackwardCrossEntropy(x Matrix, y Matrix, dValues Matrix) 
 }
 
 
+// Main dropout neural network layer struct.
+type DropoutLayer struct {
+        InputSize  int
+        OutputSize int
+        Weights    *Matrix
+        Biases     *Matrix
+	Dropout    float64
+        reluInputs Matrix
+	binaryMask Matrix
+}
+
+// Create a new dropout layer.
+func NewDropoutLayer(inputSize, outputSize int, dropout float64) (DropoutLayer, error) {
+        // Check that the input and output sizes are valid.
+        if inputSize < 1 || outputSize < 1 {
+                return DropoutLayer{}, invalidLayerDimensionsError(inputSize, outputSize)
+        }
+
+	// Check that the dropout value is correct.
+	if dropout > 1 || dropout < 0 {
+		return DropoutLayer{}, errors.New("Invalid dropout value.")
+	}
+
+        // Create the new matricies.
+        weights, _ := NewMatrix(inputSize, outputSize)
+        biases, _ := NewMatrix(1, outputSize)
+
+        // Create and return the new hidden layer.
+        return DropoutLayer{
+                InputSize:  inputSize,
+                OutputSize: outputSize,
+                Weights:    &weights,
+                Biases:     &biases,
+		Dropout:    dropout,
+	}, nil
+}
+
+// Get the values for the layer.
+func (l *DropoutLayer) getValues() (*Matrix, *Matrix, map[string]float64) {
+	values := map[string]float64{"inputs": float64(l.InputSize), "outputs": float64(l.OutputSize), "type": float64(DropoutLayerType), "dropout": l.Dropout}
+        return l.Weights, l.Biases, values
+}
+
+// Set the values for the layer.
+func (l *DropoutLayer) setValues(weights, biases Matrix, values map[string]float64) {
+        l.InputSize = int(values["inputs"])
+        l.OutputSize = int(values["outputs"])
+        l.Dropout = values["dropout"]
+	l.Weights = &weights
+        l.Biases = &biases
+}
+
+// Initialize the dropout layer values.
+func (l *DropoutLayer) Init() {
+        // Using He weight initialization. Calculate the std for the weights based on the number of inputs.
+        std := math.Sqrt(float64(2) / float64(l.InputSize))
+
+        // Create the random number generator.
+        r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+        // Randomize the weights.
+        for i := 0; i < l.InputSize; i++ {
+                for j := 0; j < l.OutputSize; j++ {
+                        // Create a random value for the weight and multiply it by the std.
+                        l.Weights.M[i][j] = r.Float64() * std
+                }
+        }
+}
+
+// Dropout layer forward pass.
+func (l *DropoutLayer) Forward(x Matrix) (Matrix, error) {
+        // Check that the input matrix is valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+
+        // Complete the feedforward process (Y = dropout(relu(XW + B))).
+        out, err := x.Dot(*l.Weights)
+        if err != nil {
+                return Matrix{}, err
+        }
+
+        for i := 0; i < out.Rows; i++ {
+                for j := 0; j < out.Cols; j++ {
+                        out.M[i][j] += l.Biases.M[0][j]
+                }
+        }
+
+        // Save the RELU inputs.
+        l.reluInputs = out
+
+        // Apply RELU activation for the hidden layer.
+        out = RELU(out)
+
+	// Apply a scaled binomial distribution matrix to the 
+	l.binaryMask, _ = NewMatrix(out.Rows, out.Cols)
+	binomial := binomial{N: 1, P: 1 - l.Dropout}
+	binomial.NewSource()
+	for i := 0; i < out.Rows; i++ {
+		for j := 0; j < out.Cols; j++ {
+			l.binaryMask.M[i][j] = binomial.Rand()
+			out.M[i][j] *= l.binaryMask.M[i][j] / (1 - l.Dropout)
+		}
+	}
+
+        // Return the matrix.
+        return out, nil
+}
+
+// Dropout layer forward pass without dropout.
+func (l *DropoutLayer) ForwardNoDropout(x Matrix) (Matrix, error) {
+        // Check that the input matrix is valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+
+        // Complete the feedforward process (Y = dropout(relu(XW + B))).
+        out, err := x.Dot(*l.Weights)
+        if err != nil {
+                return Matrix{}, err
+        }
+
+        for i := 0; i < out.Rows; i++ {
+                for j := 0; j < out.Cols; j++ {
+                        out.M[i][j] += l.Biases.M[0][j]
+                }
+        }
+
+        // Save the RELU inputs.
+        l.reluInputs = out
+
+        // Apply RELU activation for the hidden layer.
+        out = RELU(out)
+
+	// Return the matrix.
+	return out, nil
+}
+
+// Dropout layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
+func (l *DropoutLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+        // Check that the input and output matricies are valid.
+        if x.Cols != l.InputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+        }
+        if dValues.Cols != l.OutputSize {
+                return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
+        }
+
+	// Calculate the gradients on the dropout.
+	for i := 0; i < dValues.Rows; i++ {
+                for j := 0; j < dValues.Cols; j++ {
+			dValues.M[i][j] *= l.binaryMask.M[i][j]
+		}
+	}
+
+        // Calculate the gradients on the RELU activation function.
+        dValues = RELUPrime(dValues, l.reluInputs)
+
+        // Complete the backpropagation process and calculate the gradients.
+        it := x.T()
+        wt := l.Weights.T()
+        dWeights, err := it.Dot(dValues)
+        if err != nil {
+                return Matrix{}, Matrix{}, Matrix{}, err
+        }
+
+        dBiases := dValues.Sum(0)
+
+        dInputs, err := dValues.Dot(wt)
+
+        return dWeights, dBiases, dInputs, nil
+}

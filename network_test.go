@@ -206,3 +206,34 @@ func TestSoftmaxCrossEntropyLayer(t *testing.T) {
         }
         t.Logf("%v, %v, %v", dWeights, dBiases, dInputs)
 }
+
+// Test dropout neural network hidden layer forward and backward passes.
+func TestDropoutLayer(t *testing.T) {
+        // Create the layer.
+        l, _ := NewDropoutLayer(3, 5, 0.1)
+
+        // Initialize the layer.
+        l.Init()
+
+        // Perform the forward pass.
+        x, err := NewMatrixFromSlice([][]float64{[]float64{1, -1, 2}})
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        out, err := l.Forward(x)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v", out)
+
+        // Perform the backward pass.
+        dValues, err := NewMatrixFromSlice([][]float64{[]float64{0.3, 0.1, 0.2, 0.2, 0.2}})
+        dWeights, dBiases, dInputs, err := l.Backward(x, dValues)
+        if err != nil {
+                t.Error(err.Error())
+                return
+        }
+        t.Logf("%v, %v, %v", dWeights, dBiases, dInputs)
+}

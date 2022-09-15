@@ -140,12 +140,22 @@ func (m *Model) InitLayers() {
 }
 
 // Forward pass. Returns a list of outputs from each layer, including the inputs.
-func (m *Model) Forward(X Matrix) ([]Matrix, error) {
+func (m *Model) Forward(X Matrix, training bool) ([]Matrix, error) {
 	outputs := []Matrix{X}
 	output := X
 
 	// Loop over all the layers and perform their forward pass.
 	for i := 0; i < m.ModelSize; i++ {
+		if _, ok := m.Layers[i].(*DropoutLayer); ok && training == false {
+			// Use the ForwardNoDropout function on the dropout layer.
+			out, err := m.Layers[i].(*DropoutLayer).ForwardNoDropout(output)
+	                output = out
+	                if err != nil {
+	                        return []Matrix{}, err
+			}
+			outputs = append(outputs, output)
+			continue
+		}
 		out, err := m.Layers[i].Forward(output)
 		output = out
 		if err != nil {
@@ -226,7 +236,7 @@ func (m *Model) Fit(X, Y Matrix, epochs, batchSize int, xVal, yVal Matrix, logEv
 			batchY, _ := NewMatrixFromSlice(Y.M[batchStep * batchSize : int(math.Min(float64((batchStep + 1) * batchSize), float64(Y.Rows)))])
 
 			// Perform the forward pass.
-			outputs, err := m.Forward(batchX)
+			outputs, err := m.Forward(batchX, true)
 			if err != nil {
 				ErrorLogger.Printf("Failed to perform forward pass: %s", err.Error())
 				return err
@@ -293,7 +303,7 @@ func (m *Model) Fit(X, Y Matrix, epochs, batchSize int, xVal, yVal Matrix, logEv
 // Calculate the average loss for the model, given X and Y.
 func (m *Model) CalculateLoss(X, Y Matrix) (float64, error) {
 	// Perform the forward pass.
-	outputs, err := m.Forward(X)
+	outputs, err := m.Forward(X, false)
 	if err != nil {
 		return 0, err
 	}
@@ -310,7 +320,7 @@ func (m *Model) CalculateLoss(X, Y Matrix) (float64, error) {
 // Calculate the accuracy of the model.  
 func (m *Model) CalculateAccuracy(X, Y Matrix) (float64, error) {
 	// Perform the forward pass.
-        outputs, err := m.Forward(X)
+        outputs, err := m.Forward(X, false)
         if err != nil {
                 return 0, err
         }
@@ -329,7 +339,7 @@ func (m *Model) CalculateAccuracy(X, Y Matrix) (float64, error) {
 // Predict the output of the model.
 func (m *Model) Predict(X Matrix) (Matrix, error) {
 	// Perform the forward pass.
-        outputs, err := m.Forward(X)
+        outputs, err := m.Forward(X, false)
         if err != nil {
                 return Matrix{}, err
         }
