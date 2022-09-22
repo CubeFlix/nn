@@ -8,7 +8,7 @@ The project is split into several files, each one responsible for a specific par
 
 Currently (as of 9/19/22) the three full neural network examples are "sine_test.go", "spiral_test.go" and "iris_test.go".
 
-This project is INCOMPLETE, but in a usable state.
+This project is COMPLETE.
 -----
 
 - [x] binary categorical accuracy
@@ -20,6 +20,5 @@ This project is INCOMPLETE, but in a usable state.
 - [x] add and test optimizers (~~sgd~~, ~~Adam~~, RMSProp)
 - [x] full model object
 - [x] add dropout
-- [ ] add regularization
 - [ ] try out 'Heavy' network classes (you know which one)
 - [ ] try out LSTM and RNNs
