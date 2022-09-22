@@ -20,5 +20,7 @@ This project is COMPLETE.
 - [x] add and test optimizers (~~sgd~~, ~~Adam~~, RMSProp)
 - [x] full model object
 - [x] add dropout
+- [ ] try out cnns
+- [ ] qubits
 - [ ] try out 'Heavy' network classes (you know which one)
 - [ ] try out LSTM and RNNs
