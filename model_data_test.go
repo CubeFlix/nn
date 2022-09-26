@@ -6,6 +6,7 @@ package nn
 import (
         "testing"
         "bytes"
+	"os"
 )
 
 
@@ -55,4 +56,59 @@ func TestModelData(t *testing.T) {
 		return
 	}
 	t.Logf("%f", j)
+}
+
+
+// Test saving and loading models from files.
+func TestModelSaveLoad(t *testing.T) {
+	// Init the logging.
+        err := InitLogger(true, true, "log.log")
+        if err != nil {
+                t.Errorf(err.Error())
+                return
+        }
+
+        // Create a new model object.
+        m := NewModel()
+
+        // Add some layers.
+        l1, _ := NewLayer(3, 5)
+        l2, _ := NewLayer(5, 5)
+        l3, _ := NewLinearLayer(5, 1)
+        m.AddLayer(&l1)
+        m.AddLayer(&l2)
+        m.AddLayer(&l3)
+
+        // Finalize the network.
+        loss, _ := NewMeanSquaredLoss(1)
+        optimizer, _ := NewAdamOptimizer(0.01, 0, 1e-7, 0.9, 0.999)
+        m.Finalize(&loss, &optimizer, RegressionAccuracyType, 0.01)
+        m.InitLayers()
+
+	// Save the model to a file.
+	err = SaveFile(&m, "testmodel.model")
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	// Load the model from the file.
+	m2, err := LoadFile("testmodel.model")
+	if err != nil {
+                t.Errorf(err.Error())
+                return
+        }
+
+	// Get the loss.
+        X, _ := NewMatrixFromSlice([][]float64{[]float64{1, 2, 3}})
+        Y, _ := NewMatrixFromSlice([][]float64{[]float64{0.5}})
+        j, err := m2.CalculateLoss(X, Y)
+        if err != nil {
+                t.Errorf(err.Error())
+                return
+        }
+        t.Logf("%f", j)
+
+	// Delete the file.
+	os.Remove("testmodel.model")
 }

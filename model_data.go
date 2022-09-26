@@ -8,6 +8,7 @@ import (
         "bytes"
         "encoding/binary"
 	"errors"
+	"os"
 )
 
 
@@ -343,4 +344,60 @@ func LoadModel(buf *bytes.Buffer) (Model, error) {
 
 	// Return the finished model.
 	return model, nil
+}
+
+
+// Save a model to a file.
+func SaveFile(model *Model, filename string) error {
+	// Get the saved model data.
+	data := NewSavedModelData(*model)
+
+	// Open the file.
+        file, err := os.Create(filename)
+        if err != nil {
+                return err
+        }
+        defer file.Close()
+
+	// Save the model data to a buffer.
+        var buffer bytes.Buffer
+        err = data.Serialize(&buffer)
+        if err != nil {
+                return err
+        }
+
+	// Write the buffer to the file.
+        _, err = file.Write(buffer.Bytes())
+        if err != nil {
+                return err
+        }
+
+	return nil
+}
+
+// Load a model from a file.
+func LoadFile(filename string) (Model, error) {
+        // Open the file.
+        file, err := os.Open(filename)
+        if err != nil {
+                return Model{}, err
+        }
+        defer file.Close()
+
+	// Get the file size and create a new buffer.
+	stat, err := file.Stat()
+	if err != nil {
+		return Model{}, err
+	}
+	buffer := make([]byte, stat.Size())
+
+        // Read the file into the buffer.
+	_, err = file.Read(buffer)
+	if err != nil {
+		return Model{}, err
+	}
+
+	// Create a bytes.Buffer object and load it.
+	buf := bytes.NewBuffer(buffer)
+	return LoadModel(buf)
 }
