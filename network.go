@@ -83,7 +83,7 @@ func (l *HiddenLayer) Init() {
 	for i := 0; i < l.InputSize; i++ {
 		for j := 0; j < l.OutputSize; j++ {
 			// Create a random value for the weight and multiply it by the std.
-			l.Weights.M[i][j] = r.Float64() * std
+			l.Weights.M[i][j] = r.NormFloat64() * std
 		}
 	}
 }
@@ -200,7 +200,7 @@ func (l *LinearLayer) Init() {
         for i := 0; i < l.InputSize; i++ {
                 for j := 0; j < l.OutputSize; j++ {
                         // Create a random value for the weight and multiply it by the std.
-                        l.Weights.M[i][j] = r.Float64() * std
+                        l.Weights.M[i][j] = r.NormFloat64() * std
                 }
         }
 }
@@ -308,7 +308,7 @@ func (l *SigmoidLayer) Init() {
         for i := 0; i < l.InputSize; i++ {
                 for j := 0; j < l.OutputSize; j++ {
                         // Create a random value for the weight and multiply it by the std.
-                        l.Weights.M[i][j] = r.Float64() * std
+                        l.Weights.M[i][j] = r.NormFloat64() * std
                 }
         }
 }
@@ -431,7 +431,7 @@ func (l *LeakyLayer) Init() {
         for i := 0; i < l.InputSize; i++ {
                 for j := 0; j < l.OutputSize; j++ {
                         // Create a random value for the weight and multiply it by the std.
-                        l.Weights.M[i][j] = r.Float64() * std
+                        l.Weights.M[i][j] = r.NormFloat64() * std
                 }
         }
 }
@@ -549,7 +549,7 @@ func (l *SoftmaxLayer) Init() {
         for i := 0; i < l.InputSize; i++ {
                 for j := 0; j < l.OutputSize; j++ {
                         // Create a random value for the weight and multiply it by the std.
-                        l.Weights.M[i][j] = r.Float64() * std
+                        l.Weights.M[i][j] = r.NormFloat64() * std
                 }
         }
 }
@@ -753,7 +753,7 @@ func (l *DropoutLayer) Init() {
         for i := 0; i < l.InputSize; i++ {
                 for j := 0; j < l.OutputSize; j++ {
                         // Create a random value for the weight and multiply it by the std.
-                        l.Weights.M[i][j] = r.Float64() * std
+                        l.Weights.M[i][j] = r.NormFloat64() * std
                 }
         }
 }
