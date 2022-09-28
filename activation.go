@@ -26,7 +26,7 @@ func RELUPrime(m Matrix, x Matrix) Matrix {
 	for i := 0; i < m.Rows; i++ {
 		for j := 0; j < m.Cols; j++ {
 			// Calculate the derivatives for RELU (heaviside step function)
-			if x.M[i][j] < 0 {
+			if x.M[i][j] <= 0 {
 				m.M[i][j] = 0
 			}
 		}
