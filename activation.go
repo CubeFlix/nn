@@ -1,4 +1,4 @@
-// nn.go
+// activation.go
 // Activation functions for the neural network.
 
 package nn
