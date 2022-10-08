@@ -18,6 +18,7 @@ type HeavyLayer struct {
 	Heavies    *Matrix
 	Biases     *Matrix
 	reluInputs Matrix
+	xSquared   Matrix
 }
 
 // Create a new heavy layer.
@@ -87,8 +88,13 @@ func (l *HeavyLayer) Forward(x Matrix) (Matrix, error) {
 		return Matrix{}, err
 	}
 
-	xPow := x.PowScalar(2)
+	xt := x.T()
+	xPow, err := xt.Dot(x)
+	if err != nil {
+		return Matrix{}, err
+	}
 	heavyOut, err := xPow.Dot(*l.Heavies)
+	l.xSquared = xPow
 
 	for i := 0; i < out.Rows; i++ {
 		for j := 0; j < out.Cols; j++ {
@@ -106,14 +112,14 @@ func (l *HeavyLayer) Forward(x Matrix) (Matrix, error) {
 	return out, nil
 }
 
-// Heavy layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
-func (l *HeavyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
+// Heavy layer backward pass. Arguments are the input matrix and the gradients from the next layer. Outputs the gradients for the heavies, weights, biases, and inputs, respectively.
+func (l *HeavyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, Matrix, error) {
 	// Check that the input and output matricies are valid.
 	if x.Cols != l.InputSize {
-		return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(x.Rows, x.Cols)
 	}
 	if dValues.Cols != l.OutputSize {
-		return Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, invalidMatrixDimensionsError(dValues.Rows, dValues.Cols)
 	}
 
 	// Calculate the gradients on the RELU activation function.
@@ -121,15 +127,32 @@ func (l *HeavyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix,
 
 	// Complete the backpropagation process and calculate the gradients.
 	it := x.T()
-	wt := l.Weights.T()
+	// wt := l.Weights.T()
 	dWeights, err := it.Dot(dValues)
 	if err != nil {
-		return Matrix{}, Matrix{}, Matrix{}, err
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, err
+	}
+
+	dHeavies, err := l.xSquared.Dot(dValues)
+	if err != nil {
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, err
 	}
 
 	dBiases := dValues.Sum(0)
 
-	dInputs, err := dValues.Dot(wt)
+	twoXH, err := x.Dot(*l.Heavies)
+	twoXH = twoXH.MulScalar(2)
+	if err != nil {
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, err
+	}
+	twoXH, err = twoXH.Add(*l.Weights)
+	if err != nil {
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, err
+	}
+	dInputs, err := dValues.Dot(twoXH)
+	if err != nil {
+		return Matrix{}, Matrix{}, Matrix{}, Matrix{}, err
+	}
 
-	return dWeights, dBiases, dInputs, nil
+	return dHeavies, dWeights, dBiases, dInputs, nil
 }
