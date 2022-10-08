@@ -1,5 +1,5 @@
 # Heavy Layers
 
-Heavy layers are quadratic neural network layers that work in conjunction with standard Dense layers. While a standard feedforward hidden layer might look like this:
+Heavy layers are quadratic neural network layers that work in conjunction with standard Dense layers. While a standard feedforward hidden layer might look like this: ![equation](https://latex.codecogs.com/svg.image?\mathbf{\hat{Y}}&space;=&space;\sigma(\mathbf{XW}&space;&plus;&space;\vec{b})&space;), a quadratic "Heavy" layer would include a third, squared term with its own weight matrix.
 
-![equation](https://latex.codecogs.com/svg.image?\mathbf{\hat{Y}}&space;=&space;\sigma(\mathbf{XW}&space;&plus;&space;\vec{b})&space;)
+A simple forward pass on a Heavy layer would function like this: ![equation](https://latex.codecogs.com/svg.image?\mathbf{\hat{Y}}&space;=&space;\sigma{}(\mathbf{XX}^{T}\mathbf{H}&space;&plus;&space;\mathbf{XW&space;&plus;&space;\vec{b}})). The new **H** matrix would be of size inputs * outputs: ![equation](https://latex.codecogs.com/svg.image?\mathbf{X}\in{}\mathbb{R}_{n_s\times{}n_i}&space;\rightarrow&space;\mathbf{X}^T\mathbf{X}\in{}\mathbb{R}_{n_i&space;\times{}&space;n_i}&space;\rightarrow&space;\mathbf{X}^T\mathbf{X}\mathbf{H}\in{}\mathbb{R}_{n_i&space;\times{}&space;n_o}&space;\rightarrow&space;\mathbf{H}\in\mathbb{R}_{n_i&space;\times&space;n_o}&space;)

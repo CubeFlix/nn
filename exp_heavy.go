@@ -74,7 +74,7 @@ func (l *HeavyLayer) Init() {
 	}
 }
 
-// heavy layer forward pass.
+// Heavy layer forward pass.
 func (l *HeavyLayer) Forward(x Matrix) (Matrix, error) {
 	// Check that the input matrix is valid.
 	if x.Cols != l.InputSize {
@@ -106,7 +106,7 @@ func (l *HeavyLayer) Forward(x Matrix) (Matrix, error) {
 	return out, nil
 }
 
-// heavy layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
+// Heavy layer backward pass. Arguments are the input matrix and the gradients from the next layer. Ouputs the gradients for the weights, biases, and inputs, respectively.
 func (l *HeavyLayer) Backward(x Matrix, dValues Matrix) (Matrix, Matrix, Matrix, error) {
 	// Check that the input and output matricies are valid.
 	if x.Cols != l.InputSize {
