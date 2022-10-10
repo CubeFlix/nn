@@ -8,14 +8,14 @@ import (
 	"testing"
 	"math"
 	"time"
-	"math/rand"
+	// "math/rand"
 )
 
 func TestHeavySine(t *testing.T) {
 	// Create the layers.
-	l, _ := NewHeavyLayer(1, 5)
-	l2, _ := NewHeavyLayer(5, 10)
-	l3, _ := NewLinearLayer(10, 1)
+	l, _ := NewHeavyLayer(1, 10)
+	l2, _ := NewHeavyLayer(10, 5)
+	l3, _ := NewLinearLayer(5, 1)
 	loss, _ := NewMeanSquaredLoss(1)
 	l.Init()
 	l2.Init()
@@ -23,41 +23,43 @@ func TestHeavySine(t *testing.T) {
 	t.Logf("%v", l.Weights)
 
 	// Create the optimizer objects.
-	opt1, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
-        opt2, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
-        opt3, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
+	opt1, _ := NewHeavyAdamOptimizer(0.01, 1e-4, 1e-7, 0.9, 0.999)
+        opt2, _ := NewHeavyAdamOptimizer(0.01, 1e-4, 1e-7, 0.9, 0.999)
+        opt3, _ := NewAdamOptimizer(0.01, 1e-4, 1e-7, 0.9, 0.999)
 
 	// Num of epochs.
-	epochs := 1000
+	epochs := 10000
 
 	// Get start time.
 	starttime := time.Now()
 	t.Logf(starttime.String())
 
 	// Create the input data.
-	samples := 250
-	x, _ := NewMatrix(samples, 1)
-	y, _ := NewMatrix(samples, 1)
+	samples := 10000
+	X, _ := NewMatrix(samples, 1)
+	Y, _ := NewMatrix(samples, 1)
 	for i := 0; i < samples; i++ {
-		_ = x.Set(i, 0, float64(i)/float64(samples))
-		_ = y.Set(i, 0, (math.Sin(float64(i)/float64(samples))))
+		_ = X.Set(i, 0, float64(i)/float64(samples))
+		_ = Y.Set(i, 0, (math.Sin(2 * math.Pi * float64(i)/float64(samples))))
 	}
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(samples, func(i, j int) { x.M[i], x.M[j] = x.M[j], x.M[i]; y.M[i], y.M[j] = y.M[j], y.M[i] })
+	//rand.Seed(time.Now().UnixNano())
+	//rand.Shuffle(samples, func(i, j int) { X.M[i], X.M[j] = X.M[j], X.M[i]; Y.M[i], Y.M[j] = Y.M[j], Y.M[i] })
 
 	// Get time.
 	t.Logf(time.Now().String())
 
+	gradientsHeaviesL1 := Matrix{}
 	gradientsWeightsL1 := Matrix{}
 	gradientsBiasesL1 := Matrix{}
+	gradientsHeaviesL2 := Matrix{}
 	gradientsWeightsL2 := Matrix{}
 	gradientsBiasesL2 := Matrix{}
 	gradientsWeightsL3 := Matrix{}
         gradientsBiasesL3 := Matrix{}
 	for i := 0; i < epochs; i++ {
-	for start := 0; start < samples; start+=25 {
-        X, _ := NewMatrixFromSlice(x.M[start:start+25])
-	Y, _ := NewMatrixFromSlice(y.M[start:start+25])
+	// for start := 0; start < samples; start+=999 {
+    //     X, _ := NewMatrixFromSlice(x.M[start:start+999])
+	// Y, _ := NewMatrixFromSlice(y.M[start:start+999])
 	// Forward and backward passes.
 
 	// Forward layer 1.
@@ -94,13 +96,13 @@ func TestHeavySine(t *testing.T) {
 	if i % 100 == 0 {
                 t.Logf("batch loss: %f", j)
 		// Calculate accuracy.
-		s := 0
-		for n := 0; n < 24; n++ {
-			if math.Abs(out3.M[n][0] - Y.M[n][0]) < 0.01{
-				s += 1
-			}
-		}
-		t.Logf("batch acc: %f", float64(s)/float64(24))
+		//s := 0
+		//for n := 0; n < 1000; n++ {
+		//	if math.Abs(out3.M[n][0] - Y.M[n][0]) < 0.01{
+		//		s += 1
+		//	}
+		//}
+		//t.Logf("batch acc: %f", float64(s)/float64(1000))
         }
 
 	// Backward passes.
@@ -121,20 +123,22 @@ func TestHeavySine(t *testing.T) {
 	gradientsBiasesL3 = dBiases
 
 	// Layer 2 backward pass.
-	dWeights, dBiases, dValues, err = l2.Backward(out1, dValues)
+	dHeavies, dWeights, dBiases, dValues, err := l2.Backward(out1, dValues)
         if err != nil {
                 t.Errorf(err.Error())
                 return
         }
+		gradientsHeaviesL2 = dHeavies
         gradientsWeightsL2 = dWeights
         gradientsBiasesL2 = dBiases
 
 	// Layer 1 backward pass.
-	dWeights, dBiases, dValues, err = l.Backward(X, dValues)
+	dHeavies, dWeights, dBiases, dValues, err = l.Backward(X, dValues)
         if err != nil {
                 t.Errorf(err.Error())
                 return
         }
+		gradientsHeaviesL1 = dHeavies
         gradientsWeightsL1 = dWeights
         gradientsBiasesL1 = dBiases
 
@@ -144,16 +148,16 @@ func TestHeavySine(t *testing.T) {
 		t.Errorf(err.Error())
 		return
 	}
-	opt2.Update(l2.Weights, l2.Biases, gradientsWeightsL2, gradientsBiasesL2)
+	opt2.Update(l2.Heavies, l2.Weights, l2.Biases, gradientsHeaviesL2, gradientsWeightsL2, gradientsBiasesL2)
         if err != nil {
                 t.Errorf(err.Error())
                 return
         }
-	opt1.Update(l.Weights, l.Biases, gradientsWeightsL1, gradientsBiasesL1)
+	opt1.Update(l.Heavies, l.Weights, l.Biases, gradientsHeaviesL1, gradientsWeightsL1, gradientsBiasesL1)
         if err != nil {
                 t.Errorf(err.Error())
                 return
         }
-	} // Batch loop
+	// } // Batch loop
 	} // Epoch loop
 }

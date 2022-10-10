@@ -28,7 +28,7 @@ func TestSine(t *testing.T) {
         opt3, _ := NewAdamOptimizer(0.001, 0, 1e-7, 0.9, 0.999)
 
 	// Num of epochs.
-	epochs := 1000
+	epochs := 2
 
 	// Get start time.
 	starttime := time.Now()
